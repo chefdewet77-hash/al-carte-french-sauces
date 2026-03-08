@@ -15271,6 +15271,17 @@ function aggregateIngredients(ids) {
 }
 
 
+const ACHIEVEMENTS = [
+  { id:"first_cook",    icon:"🍳", label:"First Steps",         desc:"Cooked your first sauce",      check:(c)     => c.size >= 1 },
+  { id:"perfectionist", icon:"🌟", label:"Perfectionist",        desc:"Gave a sauce 5 stars",         check:(c,f,r) => Object.values(r).some(v => v === 5) },
+  { id:"fav_collector", icon:"💜", label:"Collector",            desc:"Saved 10 favourites",          check:(c,f)   => f.size >= 10 },
+  { id:"critic",        icon:"⭐", label:"The Critic",           desc:"Rated 10 sauces",              check:(c,f,r) => Object.keys(r).length >= 10 },
+  { id:"ten_cooked",    icon:"🏅", label:"Sauce Explorer",       desc:"Cooked 10 sauces",             check:(c)     => c.size >= 10 },
+  { id:"mother_master", icon:"👑", label:"Mother Sauces Master", desc:"Cooked all 5 mother sauces",   check:(c)     => SAUCES.filter(s=>s.category==="mother").every(s=>c.has(s.id)) },
+  { id:"quarter_cent",  icon:"🥇", label:"Committed Chef",       desc:"Cooked 25 sauces",             check:(c)     => c.size >= 25 },
+  { id:"half_century",  icon:"🏆", label:"Half Century",         desc:"Cooked 50 sauces",             check:(c)     => c.size >= 50 },
+];
+
 export default function FrenchSaucesApp() {
   const [selected,      setSelected]      = useState(null);
   const [search,        setSearch]        = useState("");
@@ -15301,9 +15312,17 @@ export default function FrenchSaucesApp() {
   const [timerDone,     setTimerDone]     = useState(false);
   const [ratings,       setRatings]       = useState(() => { try { return JSON.parse(localStorage.getItem("lsc_ratings") || "{}"); } catch { return {}; } }); // { [sauceId]: 1-5 }
   const [darkMode,      setDarkMode]      = useState(() => { try { return localStorage.getItem("lsc_dark") === "1"; } catch { return false; } });
+  const [toasts,        setToasts]        = useState([]);
+  const [achievements,  setAchievements]  = useState(() => { try { return JSON.parse(localStorage.getItem("lsc_ach") || "[]"); } catch { return []; } });
   const searchRef = useRef(null);
   const noteRef   = useRef(null);
   const timerRef  = useRef(null);
+
+  const addToast = useCallback((msg, icon = "✓") => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, msg, icon }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3800);
+  }, []);
 
   const sauce       = selected ? SAUCES.find(s => s.id === selected) : null;
   const baseServings= sauce?.servings ?? 4;
@@ -15324,6 +15343,12 @@ export default function FrenchSaucesApp() {
       if (e.key === "/" && document.activeElement.tagName !== "INPUT") {
         e.preventDefault();
         searchRef.current?.focus();
+      }
+      const inInput = ["INPUT","TEXTAREA"].includes(document.activeElement.tagName);
+      if (!inInput && !e.ctrlKey && !e.metaKey && e.key === "d") { setDarkMode(m => !m); }
+      if (!inInput && !e.ctrlKey && !e.metaKey && e.key === "r" && !cookingMode) {
+        e.preventDefault();
+        navigateTo(SAUCES[Math.floor(Math.random() * SAUCES.length)].id);
       }
       if (cookingMode && sauce) {
         if (e.key === "ArrowRight" || e.key === "ArrowDown") setCookStep(s => Math.min(s + 1, sauce.steps.length - 1));
@@ -15386,6 +15411,20 @@ export default function FrenchSaucesApp() {
   useEffect(() => { try { localStorage.setItem("lsc_recent",   JSON.stringify(recentlyViewed));     } catch {} }, [recentlyViewed]);
   useEffect(() => { try { localStorage.setItem("lsc_ratings",  JSON.stringify(ratings));            } catch {} }, [ratings]);
   useEffect(() => { try { localStorage.setItem("lsc_dark",     darkMode ? "1" : "0");               } catch {} }, [darkMode]);
+  useEffect(() => { try { localStorage.setItem("lsc_ach",      JSON.stringify(achievements));        } catch {} }, [achievements]);
+
+  // Check and unlock achievements (read achievements from ref to avoid dep-loop)
+  const achRef = useRef(achievements);
+  useEffect(() => { achRef.current = achievements; }, [achievements]);
+
+  useEffect(() => {
+    const cooked = new Set(SAUCES.filter(s => s.steps.length > 0 && s.steps.every((_, i) => completedSteps[`${s.id}_${i}`])).map(s => s.id));
+    const newOnes = ACHIEVEMENTS.filter(a => !achRef.current.includes(a.id) && a.check(cooked, favorites, ratings));
+    if (newOnes.length > 0) {
+      setAchievements(prev => [...prev, ...newOnes.map(a => a.id)]);
+      newOnes.forEach((a, i) => setTimeout(() => addToast(`${a.label} unlocked!`, a.icon), i * 700 + 300));
+    }
+  }, [completedSteps, favorites, ratings]);
 
   const navigateTo = (id) => {
     setSelected(id);
@@ -15398,8 +15437,8 @@ export default function FrenchSaucesApp() {
     setRecentlyViewed(prev => [id, ...prev.filter(x => x !== id)].slice(0, 8));
   };
 
-  const toggleFav  = (id, e) => { if (e) e.stopPropagation(); setFavorites(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); };
-  const toggleShop = (id, e) => { if (e) e.stopPropagation(); setShopList(prev  => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); };
+  const toggleFav  = (id, e) => { if (e) e.stopPropagation(); const adding = !favorites.has(id); setFavorites(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); addToast(adding ? "Added to favourites" : "Removed from favourites", adding ? "♥" : "♡"); };
+  const toggleShop = (id, e) => { if (e) e.stopPropagation(); const adding = !shopList.has(id);  setShopList(prev  => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); addToast(adding ? "Added to shopping list" : "Removed from list", adding ? "🛒" : "✕"); };
 
   const openNote = (id) => {
     setNoteText(userNotes[id] ?? "");
@@ -15455,7 +15494,12 @@ export default function FrenchSaucesApp() {
 
   const shopIngredients = aggregateIngredients([...shopList]);
 
-  const ratesSauce = (id, star) => setRatings(prev => star === prev[id] ? (({ [id]: _, ...rest }) => rest)(prev) : { ...prev, [id]: star });
+  const ratesSauce = (id, star) => {
+    const labels = ["","Poor","Fair","Good","Great","Perfect"];
+    const removing = ratings[id] === star;
+    setRatings(prev => removing ? (({ [id]: _, ...rest }) => rest)(prev) : { ...prev, [id]: star });
+    addToast(removing ? "Rating cleared" : `Rated: ${labels[star]}`, removing ? "☆" : "⭐");
+  };
 
   return (
     <div style={{ fontFamily:"'Georgia','Times New Roman',serif", background: darkMode ? "#111827" : "#eef2f8", minHeight:"100vh", color: darkMode ? "#e2e8f0" : "#1a2540", transition:"background .3s, color .3s" }}>
@@ -15497,6 +15541,10 @@ export default function FrenchSaucesApp() {
         .cat-chip:hover:not(.on){border-color:#9ab4d0;color:#1a2540}
         .star-btn{background:none;border:none;cursor:pointer;font-size:18px;padding:1px 2px;line-height:1;transition:transform .1s}
         .star-btn:hover{transform:scale(1.25)}
+        .toast-enter{animation:toastIn .3s cubic-bezier(.175,.885,.32,1.275)}
+        .toast-exit{animation:toastOut .35s ease forwards}
+        @keyframes toastIn{from{opacity:0;transform:translateX(80px) scale(.9)}to{opacity:1;transform:translateX(0) scale(1)}}
+        @keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(80px)}}
         ${darkMode ? `
           .sc{background:#1e2a3e!important;border-color:#2d3f5a!important;color:#e2e8f0!important}
           .sc:hover{border-color:#4878c0!important;box-shadow:0 10px 32px rgba(0,0,0,.4)!important}
@@ -16376,6 +16424,26 @@ export default function FrenchSaucesApp() {
               </div>
             )}
 
+            {/* Achievements trophy case */}
+            {achievements.length > 0 && (
+              <div style={{ marginBottom:16, background:"#fff", border:"1px solid #dde8f4", borderRadius:10, padding:"14px 18px" }}>
+                <p style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#b0bcd0", letterSpacing:"1px", textTransform:"uppercase", marginBottom:10 }}>
+                  Achievements · {achievements.length} / {ACHIEVEMENTS.length}
+                </p>
+                <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                  {ACHIEVEMENTS.map(a => {
+                    const unlocked = achievements.includes(a.id);
+                    return (
+                      <div key={a.id} title={a.desc} style={{ display:"flex", alignItems:"center", gap:5, background: unlocked ? "#f0f6ff" : "#f8f9fc", border:`1px solid ${unlocked ? "#b8d0ef" : "#e0e8f4"}`, borderRadius:8, padding:"5px 10px", opacity: unlocked ? 1 : 0.4, transition:"all .2s" }}>
+                        <span style={{ fontSize:16, filter: unlocked ? "none" : "grayscale(1)" }}>{a.icon}</span>
+                        <span style={{ fontFamily:"'Crimson Text',serif", fontSize:12, color: unlocked ? "#2060b0" : "#a0b0c8" }}>{a.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Sauce of the Day */}
             <div
               onClick={() => navigateTo(sauceOfDay.id)}
@@ -16514,6 +16582,18 @@ export default function FrenchSaucesApp() {
               )}
             </>
           )}
+        </div>
+      )}
+
+      {/* ─── Toast Notifications ─── */}
+      {toasts.length > 0 && (
+        <div style={{ position:"fixed", bottom:24, right:24, display:"flex", flexDirection:"column", gap:8, zIndex:9999, pointerEvents:"none" }}>
+          {toasts.map(t => (
+            <div key={t.id} className="toast-enter" style={{ background: darkMode ? "#1e2a3e" : "#fff", border:`1px solid ${darkMode ? "#3a5070" : "#cdd8ea"}`, borderRadius:12, padding:"10px 16px", display:"flex", alignItems:"center", gap:10, boxShadow:"0 6px 24px rgba(0,0,0,.14)", minWidth:200, maxWidth:280 }}>
+              <span style={{ fontSize:18, lineHeight:1 }}>{t.icon}</span>
+              <span style={{ fontFamily:"'Crimson Text',serif", fontSize:14, color: darkMode ? "#e2e8f0" : "#1a2540", flex:1 }}>{t.msg}</span>
+            </div>
+          ))}
         </div>
       )}
     </div>
