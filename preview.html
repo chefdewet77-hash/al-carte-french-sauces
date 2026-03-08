@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>French Sauces App Preview</title>
+  <style>
+    body { margin: 0; font-family: system-ui, sans-serif; background: #eef2f8; }
+    #root { min-height: 100vh; padding-top: 52px; }
+    .notice { position: fixed; top: 0; left: 0; right: 0; padding: 10px 14px; background: rgba(255,255,255,0.95); border-bottom: 1px solid #d2dae6; font-size: 13px; color: #1a2b4a; z-index: 999; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+    .notice button { border: 1px solid #cdd8ea; background: #fff; padding: 4px 10px; border-radius: 20px; font-size: 12px; color: #1a2b4a; cursor: pointer; }
+    .notice button:hover { background: #f3f7ff; }
+    .spinner { width: 18px; height: 18px; border: 3px solid rgba(32, 58, 88, 0.25); border-top-color: rgba(32, 58, 88, 0.75); border-radius: 50%; animation: spin 0.9s linear infinite; margin-right: 10px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .error { color: #a02a2a; }
+    .detail { margin-top: 10px; font-size: 12px; color: #4a5c6c; }
+    pre { background:#fff5f5; border:1px solid #f2c2c2; color:#6a1a1a; padding:10px; margin:12px; white-space:pre-wrap; }
+  </style>
+</head>
+<body>
+  <div class="notice" id="notice">
+    <span style="display:flex; align-items:center;"><span class="spinner" id="spinner"></span><span id="noticeText">Loading preview…</span></span>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button id="openFileBtn">Open local .jsx file</button>
+      <button id="hintBtn">Help</button>
+    </div>
+  </div>
+  <input type="file" id="fileInput" accept=".jsx,.js" style="display:none" />
+  <div id="root"></div>
+
+  <!-- Local dependencies -->
+  <script src="./react.min.js"></script>
+  <script src="./react-dom.min.js"></script>
+  <script src="./babel.min.js"></script>
+
+  <script>
+    const noticeText = document.getElementById('noticeText');
+    const spinner = document.getElementById('spinner');
+    const hintBtn = document.getElementById('hintBtn');
+    const openFileBtn = document.getElementById('openFileBtn');
+    const fileInput = document.getElementById('fileInput');
+
+    function setNotice(message, { error = false, showSpinner = false } = {}) {
+      noticeText.textContent = message;
+      noticeText.classList.toggle('error', error);
+      spinner.style.display = showSpinner ? 'inline-block' : 'none';
+    }
+
+    function showHint() {
+      setNotice('Open the .jsx file via the button below. If you need a server, run: python -m http.server 8000', { error: false, showSpinner: false });
+      alert('Click "Open local .jsx file" and choose the file.\n\nIf you want a local HTTP server instead, run:\n\n  python -m http.server 8000\n\nThen open http://localhost:8000/preview.html');
+    }
+
+    hintBtn.addEventListener('click', showHint);
+
+    function renderApp() {
+      if (window.FrenchSaucesApp) {
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(window.FrenchSaucesApp));
+        setNotice('Loaded successfully! Use search to browse sauces.', { error: false, showSpinner: false });
+        return true;
+      }
+      return false;
+    }
+
+    function waitForApp() {
+      if (renderApp()) return;
+      setNotice('Waiting for app to be available...', { showSpinner: true });
+      setTimeout(waitForApp, 500);
+    }
+
+    openFileBtn.addEventListener('click', () => fileInput.click());
+
+    function transformSource(source) {
+      // Remove React imports; React is loaded globally
+      source = source.replace(/^import\s+\{[^}]*\}\s+from\s+["']react["'];?\s*\n?/m, '');
+
+      // Convert `export default function Name(...) {}` into a global function
+      source = source.replace(/^export\s+default\s+function\s+([A-Za-z0-9_]+)\s*\(/m, 'function $1(');
+      const match = source.match(/^function\s+([A-Za-z0-9_]+)\s*\(/m);
+      if (match) {
+        const name = match[1];
+        source += `\nwindow.${name} = ${name};`;
+      }
+
+      // Handle `export default Identifier;`
+      source = source.replace(/export\s+default\s+([A-Za-z0-9_]+);/g, (m, id) => `window.${id} = ${id};`);
+
+      // Handle `export default (...) => {}` (assign to window.FrenchSaucesApp)
+      source = source.replace(/export\s+default\s*\(/g, 'window.FrenchSaucesApp = (');
+
+      // Remove any remaining exports that would break the browser environment
+      source = source.replace(/export\s+\{[^}]*\};?/g, '');
+      source = source.replace(/export\s+(const|let|var|function|class)\s+/g, '$1 ');
+
+      return source;
+    }
+
+    fileInput.addEventListener('change', (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      setNotice('Loading file...', { showSpinner: true });
+      const reader = new FileReader();
+      reader.onload = () => {
+        const script = document.createElement('script');
+        script.type = 'text/babel';
+        script.setAttribute('data-presets', 'env,react');
+        script.textContent = transformSource(reader.result);
+        document.body.appendChild(script);
+        setTimeout(waitForApp, 100);
+      };
+      reader.onerror = () => setNotice('Failed to read file.', { error: true, showSpinner: false });
+      reader.readAsText(file);
+    });
+
+    // Show initial instructions
+    setNotice('Click "Open local .jsx file" to load the app.', { showSpinner: false });
+  </script>
+</body>
+</html>
