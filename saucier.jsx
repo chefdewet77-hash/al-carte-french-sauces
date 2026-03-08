@@ -15164,16 +15164,33 @@ const SAUCES = [
 
 // Technique tags derived from sauce content
 const TECHNIQUE_KEYWORDS = {
-  roux:          ["roux", "flour", "beurre manié"],
-  emulsification:["emulsif", "hollandaise", "béarnaise", "mayonnaise", "vinaigrette", "aïoli", "beurre blanc", "beurre monté"],
-  reduction:     ["reduc", "glace", "demi-glace", "concentrat"],
-  liaison:       ["liaison", "egg yolk", "cream", "crème fraîche", "yolk"],
-  fumage:        ["fumet", "smoked", "fumé"],
-  clarification: ["clarif", "consommé", "raft"],
-  poaching:      ["poach", "court-bouillon", "nage"],
-  brunoise:      ["brunoise", "mirepoix", "brunois"],
-  velouté_tech:  ["velout", "velouté"],
-  grilling:      ["grill", "gratiner", "gratin", "glaze under"],
+  roux:            ["roux", "flour and butter", "cook the flour", "beurre manié"],
+  emulsification:  ["emulsif", "hollandaise", "béarnaise", "mayonnaise", "vinaigrette", "aïoli", "beurre blanc", "beurre monté"],
+  reduction:       ["reduc", "glace", "demi-glace", "concentrat", "boil down"],
+  liaison:         ["liaison", "egg yolk", "cream", "crème fraîche", "yolk"],
+  fumage:          ["fumet", "smoked", "fumé", "fumage", "wood smoke"],
+  clarification:   ["clarif", "consommé", "raft"],
+  poaching:        ["poach", "court-bouillon", "nage", "pochée"],
+  brunoise:        ["brunoise", "mirepoix", "brunois"],
+  saute:           ["sauté", "saute", "sautéed", "sauteed", "high heat", "searing"],
+  braising:        ["brais", "braised", "cocotte", "dutch oven"],
+  blanching:       ["blanch", "refresh", "ice bath", "blanchir", "blanched"],
+  simmering:       ["simmer", "mijot", "gentle bubble"],
+  glazing:         ["glac", "lustré", "baste", "nappe", "à blanc", "à brun", "glazed"],
+  flambe:          ["flamb", "flambé", "brandy", "cognac", "calvados", "burn off"],
+  confit:          ["confit", "duck confit", "submerge", "slow-cook in fat"],
+  deglaze:         ["déglac", "deglac", "pan dripping", "fond", "deglaze", "deglazed"],
+  monter_beurre:   ["monter au beurre", "beurre monté", "cold butter", "finish with butter"],
+  beurre_manie:    ["beurre manié", "kneaded butter", "beurre manie"],
+  singer:          ["singer", "singé", "dust with flour", "sprinkle flour", "flour over"],
+  julienne:        ["julienne", "matchstick", "julienned", "en julienne"],
+  chiffonade:      ["chiffonade", "ribbon", "finely shredded"],
+  mirepoix_cut:    ["aromatic base", "aromatic vegetables", "onion carrot celery"],
+  infusion:        ["infus", "steep", "infused", "bouquet garni", "aromatise"],
+  marinade:        ["marinat", "mariner", "marinated", "marinate"],
+  beurre_noisette: ["beurre noisette", "brown butter", "noisette", "meunière"],
+  velouté_tech:    ["velout", "velouté"],
+  grilling:        ["grill", "gratiner", "gratin", "glaze under"],
 };
 
 function getSauceTechniques(sauce) {
@@ -15271,6 +15288,212 @@ function aggregateIngredients(ids) {
 }
 
 
+const TECHNIQUES = [
+  // ── Sauce-building ──────────────────────────────────────────────
+  { id:"roux",          cat:"sauce", emoji:"🎚️", name:"Roux",             french:"Le Roux",
+    short:"Equal parts fat and flour cooked together to eliminate the raw starch taste before liquid is added.",
+    tips:["Cook a white roux for 2 min (béchamel/velouté), blond roux 4–5 min until biscuity, dark roux 10–15 min to chocolate colour.",
+          "Always add warm liquid to a hot roux — cold liquid causes lumps; so does a cold roux added to boiling liquid.",
+          "Dark roux loses thickening power as starch gelatinises: expect to use 30% more for the same consistency.",
+          "Whisking constantly when adding the first ladle of liquid is the moment that decides lump-free or lumpy."],
+    keywords:["roux","flour and butter","cook the flour","add flour","beurre manié"] },
+
+  { id:"reduction",     cat:"sauce", emoji:"🌀", name:"Réduction",        french:"La Réduction",
+    short:"Simmering a liquid to concentrate flavour and thicken by evaporation — the simplest sauce technique.",
+    tips:["Wide, shallow pans evaporate fastest; deep narrow pans reduce slowly and unevenly.",
+          "Skim foam and fat regularly for a clean, glossy sauce.",
+          "Reduce over medium heat — high heat scorches delicate flavours.",
+          "'Glace de viande' is stock reduced to a near-solid; 'demi-glace' is reduced by half."],
+    keywords:["reduc","reduce","glace","concentrat","demi-glace","boil down","cook down"] },
+
+  { id:"emulsification",cat:"sauce", emoji:"🫧", name:"Émulsification",   french:"L'Émulsification",
+    short:"Combining immiscible fat and water into a stable, silky sauce using an emulsifier such as lecithin.",
+    tips:["Add fat very slowly at first to establish the emulsion, then faster once it stabilises.",
+          "Temperature is critical for warm emulsions: remove from heat at the first hint of scrambling.",
+          "A broken sauce can be rescued — start with a fresh yolk and whisk the broken sauce into it drop by drop.",
+          "For cold emulsions (mayonnaise, aïoli), all ingredients should be at room temperature."],
+    keywords:["emulsif","hollandaise","béarnaise","mayonnaise","vinaigrette","aïoli","beurre blanc","beurre monté","whisk in"] },
+
+  { id:"liaison",       cat:"sauce", emoji:"🥚", name:"Liaison",          french:"La Liaison",
+    short:"A mixture of egg yolks and cream that thickens and enriches a sauce without boiling it.",
+    tips:["Temper the liaison by whisking a ladleful of hot liquid into it before adding it to the pot.",
+          "Never boil a sauce after adding a liaison — the yolks will curdle immediately.",
+          "Classic ratio: 3 egg yolks to 100 ml double cream for 1 litre of sauce.",
+          "Stir in slow figure-of-eight movements to distribute heat evenly without incorporation of air."],
+    keywords:["liaison","egg yolk","cream","crème fraîche","yolk and cream","temper the"] },
+
+  { id:"monter_beurre", cat:"sauce", emoji:"🧈", name:"Monter au Beurre", french:"Monter au Beurre",
+    short:"Whisking cold cubed butter into a hot sauce just before serving to add gloss, richness, and body.",
+    tips:["Use cold butter cut into cubes — room-temperature butter will break the sauce immediately.",
+          "Remove the pan from direct heat or keep it on the very lowest flame while mounting.",
+          "Add butter piece by piece, whisking constantly between each addition.",
+          "The finished sauce should be glossy, velvety, and coat the back of a spoon."],
+    keywords:["monter au beurre","mounting butter","beurre monté","whisk in cold butter","finish with butter","cold butter","mount with butter"] },
+
+  { id:"beurre_manie",  cat:"sauce", emoji:"🤲", name:"Beurre Manié",     french:"Beurre Manié",
+    short:"Equal parts soft butter and flour worked to a paste and added raw to a hot liquid to thicken.",
+    tips:["Unlike a roux it is added at the end, not the beginning — handy for last-minute corrections.",
+          "Whisk in small pinches and let the sauce simmer 2–3 minutes to cook out the flour taste.",
+          "Produces a slightly less refined texture than a roux — best for rustic braises and stews.",
+          "Store unused beurre manié wrapped in the refrigerator for up to a week."],
+    keywords:["beurre manié","kneaded butter","beurre manie","flour-butter paste"] },
+
+  { id:"singer",        cat:"sauce", emoji:"🌾", name:"Singer",           french:"Singer",
+    short:"Dusting flour over sautéed meat or vegetables in the pan to create an in-pan roux before liquid is added.",
+    tips:["Stir the flour into the fat coating the meat for 1–2 minutes to cook it slightly before adding stock.",
+          "Singer creates a built-in thickener without a separate roux — typical of daubes and blanquettes.",
+          "Don't add too much flour — it creates a pasty, starchy sauce.",
+          "The flour should coat the ingredients evenly; a fine sieve gives a more even dusting."],
+    keywords:["singer","dust with flour","singé","sprinkle flour","flour over","dredge with flour"] },
+
+  { id:"deglaze",       cat:"sauce", emoji:"🍷", name:"Déglacer",         french:"Déglacer",
+    short:"Adding liquid to a hot pan to dissolve the caramelised drippings (fond) clinging to the base.",
+    tips:["The 'fond' — the brown crust on the pan — is pure concentrated flavour; deglaze it completely.",
+          "Wine is the classic deglazer; reduce it by half before adding stock to avoid bitterness.",
+          "Use a wooden spoon or flat spatula to scrape every particle of fond from the pan base.",
+          "Let the pan cool slightly before adding spirit-based deglazer to avoid a dangerous flare."],
+    keywords:["déglac","deglac","pan dripping","fond","deglaze","scrape the pan","wine to deglaze","deglazed"] },
+
+  // ── Heat methods ────────────────────────────────────────────────
+  { id:"saute",         cat:"heat",  emoji:"🔥", name:"Sauté",            french:"Faire Sauter",
+    short:"Rapid cooking in a small amount of very hot fat to develop colour and seal in juices.",
+    tips:["The pan must be very hot before fat goes in, and fat must shimmer before food is added.",
+          "Never crowd the pan — moisture released by crowding creates steam, not a sear.",
+          "'Sauter' means 'to jump': keep the food moving with a flick of the wrist to prevent burning.",
+          "Dry protein thoroughly with kitchen paper before sautéing — surface moisture prevents browning."],
+    keywords:["sauté","saute","sauteing","sautéed","high heat","brown quickly","sear","searing","séarer"] },
+
+  { id:"poaching",      cat:"heat",  emoji:"💧", name:"Pochage",          french:"Le Pochage",
+    short:"Gentle cooking submerged in liquid held at 71–82°C — below a simmer, with barely a movement.",
+    tips:["The ideal poaching temperature shows only an occasional lazy bubble, not a simmer.",
+          "Court-bouillon (acidulated aromatic liquid) is the classic poaching medium for fish and shellfish.",
+          "Use a wide shallow pan so items sit in a single layer without stacking.",
+          "Poaching is the technique for quenelles, delicate fish, and eggs — it demands patience."],
+    keywords:["poach","court-bouillon","nage","gentle heat","pochée","poached","pochage"] },
+
+  { id:"braising",      cat:"heat",  emoji:"🍲", name:"Braisage",         french:"Le Braisage",
+    short:"Long, slow cooking in a small amount of liquid, in a covered pot, in the oven or over low heat.",
+    tips:["Brown meat deeply before braising — colour from the Maillard reaction cannot be added later.",
+          "The braising liquid should come no higher than halfway up the meat to preserve the crust.",
+          "Keep the oven at 150–160°C for a gentle, even braise that breaks down collagen into gelatin.",
+          "Skim and reduce the braising liquid well — it becomes the finished sauce."],
+    keywords:["brais","braised","braisage","slow cook","covered","cocotte","dutch oven","stove and oven"] },
+
+  { id:"blanching",     cat:"heat",  emoji:"❄️", name:"Blanchiment",      french:"Le Blanchiment",
+    short:"A brief immersion in boiling water followed immediately by an ice bath to arrest cooking and lock colour.",
+    tips:["Use a large pot of heavily salted, aggressively boiling water for green vegetables.",
+          "The ice bath must be extremely cold and large enough to fully stop the cooking.",
+          "Blanching sets brilliant green colour, removes bitterness, and loosens skins on tomatoes.",
+          "Blanching bones removes blood and impurities before making a clear stock."],
+    keywords:["blanch","refresh","ice bath","blanchir","parboil","plunge","blanching","blanched"] },
+
+  { id:"simmering",     cat:"heat",  emoji:"♨️", name:"Mijoter",          french:"Mijoter",
+    short:"Maintaining a liquid at 85–96°C — with lazy, occasional bubbles, never a full boil.",
+    tips:["A true simmer is one gentle bubble every few seconds; anything more vigorous toughens proteins.",
+          "Regular skimming during a long simmer produces a clear, refined stock or sauce.",
+          "Use a heat diffuser under a thin-based pan if your stove runs hot.",
+          "Reducing a simmer by 5°C can be the difference between a velvety and a grainy sauce."],
+    keywords:["simmer","mijot","gentle bubble","low heat","slow heat","mijoter"] },
+
+  { id:"glazing",       cat:"heat",  emoji:"✨", name:"Glacer",           french:"Glacer",
+    short:"Coating vegetables or meat in a concentrated, glossy, sweet glaze through reduction and basting.",
+    tips:["Vegetables glazed à blanc are finished gently (pale gold); à brun means a deeper caramel colour.",
+          "'Glacer' also means browning a dish under the grill — used for gratins and soufflés.",
+          "The classic glazing liquid is stock + butter + a pinch of sugar, reduced to a syrup.",
+          "Watch closely — the gap between a perfect glaze and a scorched mess is seconds."],
+    keywords:["glac","glaze","lustré","baste","nappe","à blanc","à brun","shining","glazed","glacée"] },
+
+  { id:"flambe",        cat:"heat",  emoji:"🔴", name:"Flamber",          french:"Flamber",
+    short:"Pouring a warm spirit over food, then igniting it to burn off alcohol and leave a rounded flavour.",
+    tips:["Warm the spirit in a small pan before flambéing — cold alcohol will not ignite reliably.",
+          "Tilt the pan away from you and use a long match or the tip of a gas lighter.",
+          "Flames die naturally in 20–30 seconds once the alcohol burns off — do not cover the pan.",
+          "Never flamber under an extractor hood; or if you must, turn it off first."],
+    keywords:["flamb","ignit","spirit","brandy","cognac","calvados","armagnac","burn off","flambé","flambée"] },
+
+  { id:"confit",        cat:"heat",  emoji:"🫙", name:"Confire",          french:"Confire",
+    short:"Slow-cooking food — meat, garlic, or tomatoes — fully submerged in fat at a low, stable temperature.",
+    tips:["Duck confit is cooked at 85–90°C for 2–3 hours; too hot and the flesh shreds; too cool and it stays tough.",
+          "The confiting fat improves with each batch — strain and store it for the next use.",
+          "Properly confited meat, sealed under its fat, keeps for months in a cool larder.",
+          "Garlic confited in olive oil at 90°C for 45 minutes becomes meltingly sweet and mild."],
+    keywords:["confit","duck confit","submerge","slow-cook in fat","preserved in fat","duck leg","duck confit"] },
+
+  // ── Knife cuts ──────────────────────────────────────────────────
+  { id:"julienne",      cat:"cuts",  emoji:"🥕", name:"Julienne",         french:"La Julienne",
+    short:"Uniform matchstick cuts: 1–2 mm × 1–2 mm × 5–6 cm, used as garnish or in refined preparations.",
+    tips:["Square off the vegetable on four sides first to create planks, then cut planks into sticks.",
+          "Keep the knife tip anchored on the board and rock the blade for even, safe cuts.",
+          "Classic julienne vegetables: carrots, leeks, celery, celeriac, turnips, and courgettes.",
+          "Gathering julienne sticks and cross-cutting them to 2 mm produces a brunoise."],
+    keywords:["julienne","matchstick","julienned","en julienne","fine strips","julienn"] },
+
+  { id:"brunoise",      cat:"cuts",  emoji:"🎲", name:"Brunoise",         french:"La Brunoise",
+    short:"Very fine 2–3 mm dice cut from julienne sticks — the cornerstone French aromatic cut.",
+    tips:["A true brunoise starts with consistent julienne sticks, then cross-cutting to 2–3 mm cubes.",
+          "Sweat a brunoise over gentle heat only — the tiny pieces burn in seconds on a hot pan.",
+          "A fine brunoise (1 mm) appears in clarified consommé and classical garnishes.",
+          "The classic brunoise quartet: carrot, celery, onion, and leek."],
+    keywords:["brunoise","brunois","fine dice","2mm","3mm","mirepoix base"] },
+
+  { id:"chiffonade",    cat:"cuts",  emoji:"🌿", name:"Chiffonade",       french:"La Chiffonade",
+    short:"Rolling leafy herbs or greens into a tight cylinder and slicing across into paper-thin ribbons.",
+    tips:["Stack the leaves neatly, roll tightly, then slice as finely as possible — 1 mm or less for garnishes.",
+          "Basil and sorrel oxidise within minutes of cutting — chiffonade only at the last moment.",
+          "Salting a chiffonade draws out moisture and wilts it almost immediately; use unsalted unless adding to a cooked dish.",
+          "A chiffonade of fresh herbs applied at service brightens any classic sauce."],
+    keywords:["chiffonade","ribbon","shred","basil ribbon","chiffon","thin sliced leaves","finely shredded"] },
+
+  { id:"mirepoix_cut",  cat:"cuts",  emoji:"🧅", name:"Mirepoix",         french:"La Mirepoix",
+    short:"Rough 1 cm chunks of onion, carrot, and celery used to build flavour in stocks, braises, and sauces.",
+    tips:["The classic ratio is 2 parts onion : 1 part carrot : 1 part celery by weight.",
+          "For white stocks, sweat the mirepoix without colour; for brown stocks, roast to a deep golden brown.",
+          "A mirepoix is always strained out and discarded — it gives flavour, not texture.",
+          "Larger cuts for long braises (4h+); smaller (5 mm) for quick stocks and sauces."],
+    keywords:["mirepoix","aromatic base","aromatic vegetables","onion carrot celery","sweated vegetables"] },
+
+  // ── Preparation ─────────────────────────────────────────────────
+  { id:"clarification", cat:"prep",  emoji:"💎", name:"Clarification",    french:"La Clarification",
+    short:"Using a cold raft of egg whites and lean meat to adsorb impurities from a stock, producing consommé.",
+    tips:["Both the clarification mixture and the stock must be cold when combined.",
+          "Bring the pot to a barely visible simmer — vigorous boiling will break the raft.",
+          "Once the raft forms, never stir the consommé; any agitation clouds it immediately.",
+          "A perfect consommé is as clear as amber glass and full of intense, layered flavour."],
+    keywords:["clarif","consommé","raft","egg white","clarify","clear stock","clarification"] },
+
+  { id:"infusion",      cat:"prep",  emoji:"🫖", name:"Infusion",         french:"L'Infusion",
+    short:"Steeping aromatics in a liquid — hot or cold — to extract flavour without boiling and damaging it.",
+    tips:["Delicate herbs (tarragon, chervil, chives) should be added cold or after the heat is off.",
+          "Robust spices (star anise, cinnamon, clove) can be hot-infused in warm cream or milk.",
+          "Over-infusion makes flavours bitter and harsh — taste frequently and remove early.",
+          "A bouquet garni is the classic bundle for infusing stocks, braises, and braising liquids."],
+    keywords:["infus","steep","infused","infuse","bouquet garni","aromatise","aromatis","steep in","infusing"] },
+
+  { id:"marinade",      cat:"prep",  emoji:"🍶", name:"Marinade",         french:"La Marinade",
+    short:"Soaking protein in an acid–fat–aromatic mixture to tenderise, flavour, and sometimes preserve it.",
+    tips:["Acid (wine, vinegar, citrus) denatures surface proteins; fat carries aromatic compounds into the meat.",
+          "Marinate in the refrigerator — never more than 30 minutes at room temperature.",
+          "A very long marinade (12–24 h) can make meat texture mushy; match timing to the cut.",
+          "The marinade itself can be reduced and used as the base of the braising or pan sauce."],
+    keywords:["marinat","mariner","marinated","marinate","acid","wine marinade","marinating"] },
+
+  { id:"beurre_noisette",cat:"prep", emoji:"🟤", name:"Beurre Noisette",  french:"Beurre Noisette",
+    short:"Cooking butter in a pan until the milk solids turn golden-brown, releasing a nutty, hazelnut aroma.",
+    tips:["Use a light-coloured pan so you can clearly see the colour of the milk solids changing.",
+          "The transition from noisette (golden) to beurre noir (black) happens in under 30 seconds — stay present.",
+          "Adding cold capers, lemon juice, or vinegar to the pan stops the cooking immediately.",
+          "The classic finish: beurre noisette, capers, and lemon over poached sole meunière."],
+    keywords:["beurre noisette","brown butter","noisette","hazelnut butter","butter until golden","nutty butter","meunière","sole meunière"] },
+
+  { id:"fumage",        cat:"prep",  emoji:"💨", name:"Fumage",           french:"Le Fumage",
+    short:"Exposing food to wood smoke — hot or cold — to preserve, colour, and add a deep smoky dimension.",
+    tips:["Cold smoking (below 30°C) flavours without cooking — used for salmon, butter, cheese, and salt.",
+          "Hot smoking cooks and flavours simultaneously — used for poultry, mackerel, eel, and duck.",
+          "Wood choice defines the flavour: oak gives richness, applewood sweetness, cherry a reddish colour.",
+          "A basic home smoker can be improvised with foil, a cake rack, and wood chips in a wok."],
+    keywords:["fumet","smoked","fumé","smoke","fumage","wood smoke","cold smoked","hot smoked","fumée"] },
+];
+
 const ACHIEVEMENTS = [
   { id:"first_cook",    icon:"🍳", label:"First Steps",         desc:"Cooked your first sauce",      check:(c)     => c.size >= 1 },
   { id:"perfectionist", icon:"🌟", label:"Perfectionist",        desc:"Gave a sauce 5 stars",         check:(c,f,r) => Object.values(r).some(v => v === 5) },
@@ -15314,6 +15537,9 @@ export default function SaucierApp() {
   const [darkMode,      setDarkMode]      = useState(() => { try { return localStorage.getItem("lsc_dark") === "1"; } catch { return false; } });
   const [toasts,        setToasts]        = useState([]);
   const [achievements,  setAchievements]  = useState(() => { try { return JSON.parse(localStorage.getItem("lsc_ach") || "[]"); } catch { return []; } });
+  const [showTechGuide, setShowTechGuide] = useState(false);
+  const [selectedTech,  setSelectedTech]  = useState(null);
+  const [techCatFilter, setTechCatFilter] = useState("all");
   const searchRef = useRef(null);
   const noteRef   = useRef(null);
   const timerRef  = useRef(null);
@@ -15333,12 +15559,14 @@ export default function SaucierApp() {
   useEffect(() => {
     const handler = (e) => {
       if (e.key === "Escape") {
-        if (cookingMode) { setCookingMode(false); return; }
-        if (showCompare) { setShowCompare(false); return; }
-        if (ingSearch)   { setIngSearch(null); return; }
-        if (showShop)    { setShowShop(false); return; }
-        if (selected)    { setSelected(null); return; }
-        if (showTree)    { setShowTree(false); return; }
+        if (cookingMode)  { setCookingMode(false); return; }
+        if (showCompare)  { setShowCompare(false); return; }
+        if (ingSearch)    { setIngSearch(null); return; }
+        if (showShop)     { setShowShop(false); return; }
+        if (selected)     { setSelected(null); return; }
+        if (showTree)     { setShowTree(false); return; }
+        if (selectedTech) { setSelectedTech(null); return; }
+        if (showTechGuide){ setShowTechGuide(false); return; }
       }
       if (e.key === "/" && document.activeElement.tagName !== "INPUT") {
         e.preventDefault();
@@ -15350,6 +15578,10 @@ export default function SaucierApp() {
         e.preventDefault();
         navigateTo(SAUCES[Math.floor(Math.random() * SAUCES.length)].id);
       }
+      if (!inInput && !e.ctrlKey && !e.metaKey && e.key === "t") {
+        e.preventDefault();
+        setShowTechGuide(g => { if (!g) { setSelected(null); setShowTree(false); } return !g; });
+      }
       if (cookingMode && sauce) {
         if (e.key === "ArrowRight" || e.key === "ArrowDown") setCookStep(s => Math.min(s + 1, sauce.steps.length - 1));
         if (e.key === "ArrowLeft"  || e.key === "ArrowUp")   setCookStep(s => Math.max(s - 1, 0));
@@ -15358,7 +15590,7 @@ export default function SaucierApp() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [selected, showTree, showShop, cookingMode, cookStep, sauce]);
+  }, [selected, showTree, showShop, cookingMode, cookStep, sauce, showTechGuide, selectedTech]);
 
   const toggleStep = useCallback((sauceId, idx) => {
     const key = `${sauceId}_${idx}`;
@@ -15430,12 +15662,21 @@ export default function SaucierApp() {
     setSelected(id);
     setActiveTab("ingredients");
     setShowTree(false);
+    setShowTechGuide(false);
+    setSelectedTech(null);
     setServings(null);
     setShowShop(false);
     setCookingMode(false);
     setCookStep(0);
     setRecentlyViewed(prev => [id, ...prev.filter(x => x !== id)].slice(0, 8));
   };
+
+  const getTechSauces = useCallback((tech) => {
+    return SAUCES.filter(s => {
+      const h = (s.description + " " + s.tips + " " + s.steps.map(x => x.body).join(" ")).toLowerCase();
+      return tech.keywords.some(kw => h.includes(kw));
+    });
+  }, []);
 
   const toggleFav  = (id, e) => { if (e) e.stopPropagation(); const adding = !favorites.has(id); setFavorites(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); addToast(adding ? "Added to favourites" : "Removed from favourites", adding ? "♥" : "♡"); };
   const toggleShop = (id, e) => { if (e) e.stopPropagation(); const adding = !shopList.has(id);  setShopList(prev  => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; }); addToast(adding ? "Added to shopping list" : "Removed from list", adding ? "🛒" : "✕"); };
@@ -15588,8 +15829,11 @@ export default function SaucierApp() {
             <button className="bk" onClick={goRandom} title="Discover a random sauce" style={{ display:"flex", alignItems:"center", gap:5 }}>
               ✦ Random
             </button>
-            <button className={`bk ${showTree?"on":""}`} onClick={() => { setShowTree(!showTree); setSelected(null); }}>
+            <button className={`bk ${showTree?"on":""}`} onClick={() => { setShowTree(!showTree); setShowTechGuide(false); setSelectedTech(null); setSelected(null); }}>
               {showTree ? "▲ Tree" : "▼ Tree"}
+            </button>
+            <button className={`bk ${showTechGuide?"on":""}`} onClick={() => { setShowTechGuide(!showTechGuide); setShowTree(false); setSelected(null); }}>
+              {showTechGuide ? "▲ Tech" : "⚗️ Tech"}
             </button>
             {sauce && <button className="bk" onClick={() => setSelected(null)}>← Back</button>}
             <button
@@ -16051,6 +16295,144 @@ export default function SaucierApp() {
         </div>
       )}
 
+      {/* ─── Techniques Guide ─── */}
+      {showTechGuide && (
+        <div style={{ maxWidth:980, margin:"0 auto", padding:"20px 16px", animation:"fadeIn .18s" }}>
+          {/* Header */}
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20, flexWrap:"wrap", gap:12 }}>
+            <div>
+              <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:22, color: darkMode?"#d0dcf0":"#1a2540", margin:"0 0 4px" }}>⚗️ French Cooking Techniques</h2>
+              <p style={{ fontFamily:"'Crimson Text',serif", fontSize:14, color: darkMode?"#8090a8":"#6a7a90", fontStyle:"italic", margin:0 }}>
+                {TECHNIQUES.length} classical techniques · press <kbd style={{ background: darkMode?"#1e2e42":"#eef4ff", border:`1px solid ${darkMode?"#2a3e56":"#cdd8ea"}`, borderRadius:4, padding:"1px 5px", fontFamily:"monospace", fontSize:11 }}>T</kbd> to toggle · Esc to close
+              </p>
+            </div>
+            <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+              {[
+                { id:"all",   label:"All",           emoji:"" },
+                { id:"sauce", label:"Sauce-Building", emoji:"🧪" },
+                { id:"heat",  label:"Heat Methods",   emoji:"🔥" },
+                { id:"cuts",  label:"Knife Cuts",     emoji:"🔪" },
+                { id:"prep",  label:"Preparation",    emoji:"🧑‍🍳" },
+              ].map(cat => (
+                <button key={cat.id} onClick={() => { setTechCatFilter(cat.id); setSelectedTech(null); }}
+                  style={{ background: techCatFilter===cat.id ? (darkMode?"#1e3a5a":"#e8f0fb") : (darkMode?"#1a2535":"#fff"),
+                           border:"1px solid", borderColor: techCatFilter===cat.id ? (darkMode?"#3a6090":"#4878c0") : (darkMode?"#2a3a4e":"#cdd8ea"),
+                           color: techCatFilter===cat.id ? (darkMode?"#80b0e0":"#2060b0") : (darkMode?"#8090a8":"#8898b0"),
+                           cursor:"pointer", padding:"5px 14px", borderRadius:20,
+                           fontFamily:"'Crimson Text',serif", fontSize:13, transition:"all .15s" }}>
+                  {cat.emoji ? `${cat.emoji} ${cat.label}` : cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Technique sections by category */}
+          {(() => {
+            const CAT_LABELS = { sauce:"Sauce-Building", heat:"Heat Methods", cuts:"Knife Cuts", prep:"Preparation" };
+            const CAT_ICONS  = { sauce:"🧪", heat:"🔥", cuts:"🔪", prep:"🧑‍🍳" };
+            const cats = techCatFilter === "all" ? ["sauce","heat","cuts","prep"] : [techCatFilter];
+            return cats.map(cat => {
+              const techs = TECHNIQUES.filter(t => t.cat === cat);
+              if (!techs.length) return null;
+              return (
+                <div key={cat} style={{ marginBottom:30 }}>
+                  {techCatFilter === "all" && (
+                    <h3 style={{ fontFamily:"'Crimson Text',serif", fontSize:11, letterSpacing:"1.4px", textTransform:"uppercase",
+                                 color: darkMode?"#506080":"#9aaccf", margin:"0 0 12px", paddingBottom:7,
+                                 borderBottom:`1px solid ${darkMode?"#1e2e42":"#e8eef8"}` }}>
+                      {CAT_ICONS[cat]} {CAT_LABELS[cat]}
+                    </h3>
+                  )}
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(290px,1fr))", gap:12 }}>
+                    {techs.map(tech => {
+                      const isOpen = selectedTech === tech.id;
+                      const linked = isOpen ? getTechSauces(tech) : [];
+                      return (
+                        <div key={tech.id}
+                          style={{ background: isOpen ? (darkMode?"#162030":"#f4f8ff") : (darkMode?"#1a2535":"#fff"),
+                                   border:`1px solid ${isOpen ? (darkMode?"#2a5070":"#a8c0e0") : (darkMode?"#212e40":"#dde8f4")}`,
+                                   borderRadius:12, padding:"14px 16px", cursor:"pointer",
+                                   transition:"all .2s", boxShadow: isOpen ? "0 4px 20px rgba(0,0,0,.1)" : "none" }}
+                          onClick={() => setSelectedTech(isOpen ? null : tech.id)}>
+                          {/* Card header */}
+                          <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+                            <span style={{ fontSize:20, lineHeight:1.3, flexShrink:0 }}>{tech.emoji}</span>
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <div style={{ display:"flex", alignItems:"baseline", gap:8, flexWrap:"wrap" }}>
+                                <span style={{ fontFamily:"'Playfair Display',serif", fontSize:15, fontWeight:600, color: darkMode?"#d0ddf0":"#1a2540" }}>{tech.name}</span>
+                                <span style={{ fontFamily:"'Crimson Text',serif", fontSize:12, fontStyle:"italic", color: darkMode?"#4a6080":"#9aaccf" }}>{tech.french}</span>
+                              </div>
+                              <p style={{ fontFamily:"'Crimson Text',serif", fontSize:13, color: darkMode?"#8090a8":"#6a7a90", margin:"4px 0 0", lineHeight:1.45 }}>{tech.short}</p>
+                            </div>
+                            <span style={{ color: darkMode?"#3a5070":"#c0ccd8", fontSize:11, flexShrink:0, marginTop:3 }}>{isOpen ? "▲" : "▼"}</span>
+                          </div>
+
+                          {/* Expanded detail */}
+                          {isOpen && (
+                            <div style={{ marginTop:14, borderTop:`1px solid ${darkMode?"#1e2e42":"#e8eef8"}`, paddingTop:14 }}
+                                 onClick={e => e.stopPropagation()}>
+                              {/* Tips list */}
+                              <p style={{ fontFamily:"'Crimson Text',serif", fontSize:11, letterSpacing:"1px", textTransform:"uppercase", color: darkMode?"#4a6080":"#9aaccf", margin:"0 0 8px" }}>Chef's Tips</p>
+                              <ul style={{ margin:"0 0 14px", padding:"0 0 0 18px", listStyle:"disc" }}>
+                                {tech.tips.map((tip, i) => (
+                                  <li key={i} style={{ fontFamily:"'Crimson Text',serif", fontSize:13.5, lineHeight:1.5, color: darkMode?"#a8b8cc":"#374858", marginBottom:6 }}>{tip}</li>
+                                ))}
+                              </ul>
+
+                              {/* Linked sauces */}
+                              {linked.length > 0 && (
+                                <>
+                                  <p style={{ fontFamily:"'Crimson Text',serif", fontSize:11, letterSpacing:"1px", textTransform:"uppercase", color: darkMode?"#4a6080":"#9aaccf", margin:"0 0 8px" }}>
+                                    {linked.length} Sauce{linked.length!==1?"s":""} Using This Technique
+                                  </p>
+                                  <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:10 }}>
+                                    {linked.slice(0,20).map(s => (
+                                      <div key={s.id}
+                                        onClick={() => navigateTo(s.id)}
+                                        style={{ background: darkMode?"#0e1825":"#eef4ff", border:`1px solid ${s.accent}44`,
+                                                 borderRadius:6, padding:"3px 10px", cursor:"pointer",
+                                                 fontFamily:"'Crimson Text',serif", fontSize:12, color: s.accent,
+                                                 whiteSpace:"nowrap", transition:"background .15s" }}
+                                        onMouseEnter={e => { e.currentTarget.style.background = s.accent+"22"; }}
+                                        onMouseLeave={e => { e.currentTarget.style.background = darkMode?"#0e1825":"#eef4ff"; }}>
+                                        {s.name}
+                                      </div>
+                                    ))}
+                                    {linked.length > 20 && (
+                                      <span style={{ fontFamily:"'Crimson Text',serif", fontSize:12, color: darkMode?"#4a6070":"#9aaccf", padding:"3px 6px", fontStyle:"italic" }}>
+                                        +{linked.length - 20} more
+                                      </span>
+                                    )}
+                                  </div>
+                                </>
+                              )}
+
+                              {/* Filter-to-list button */}
+                              {TECHNIQUE_KEYWORDS[tech.id] && (
+                                <button
+                                  onClick={() => { setShowTechGuide(false); setTechFilter(tech.id); setSelected(null); addToast(`Filtered by: ${tech.name}`, tech.emoji); }}
+                                  style={{ background:"none", border:`1px solid ${darkMode?"#2a4060":"#cdd8ea"}`,
+                                           color: darkMode?"#5070a0":"#7090b8", cursor:"pointer",
+                                           borderRadius:6, padding:"5px 14px",
+                                           fontFamily:"'Crimson Text',serif", fontSize:12, transition:"all .15s" }}
+                                  onMouseEnter={e => { e.currentTarget.style.borderColor = darkMode?"#4070a0":"#8aaccf"; }}
+                                  onMouseLeave={e => { e.currentTarget.style.borderColor = darkMode?"#2a4060":"#cdd8ea"; }}>
+                                  Filter sauces by {tech.name} →
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            });
+          })()}
+        </div>
+      )}
+
       {/* ─── Detail View ─── */}
       {sauce && (
         <div style={{ maxWidth:740, margin:"0 auto", padding:"24px 16px", animation:"fadeIn .18s" }}>
@@ -16380,7 +16762,7 @@ export default function SaucierApp() {
       )}
 
       {/* ─── List View ─── */}
-      {!sauce && !showTree && (
+      {!sauce && !showTree && !showTechGuide && (
         <div style={{ maxWidth:980, margin:"0 auto", padding:"20px 16px" }}>
 
           {/* Stats dashboard — only show on home (all, no search, no filter) */}
@@ -16505,7 +16887,7 @@ export default function SaucierApp() {
               {techFilter !== "all" && ` · ${techFilter}`}
             </p>
             <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-              <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#c8d4e0" }}>/ to search · Esc back</span>
+              <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#c8d4e0" }}>/ search · T techniques · D dark · R random · Esc back</span>
               <select
                 value={sortBy} onChange={e => setSortBy(e.target.value)}
                 style={{ background:"#fff", border:"1px solid #cdd8ea", color:"#6880a8", cursor:"pointer", padding:"4px 8px", borderRadius:6, fontFamily:"'Crimson Text',serif", fontSize:12, outline:"none" }}
