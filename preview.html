@@ -72,19 +72,27 @@
     openFileBtn.addEventListener('click', () => fileInput.click());
 
     function transformSource(source) {
-      // Remove React imports; React is loaded globally
-      source = source.replace(/^import\s+\{[^}]*\}\s+from\s+["']react["'];?\s*\n?/m, '');
+      // Replace React named imports with global destructuring (React is loaded globally)
+      source = source.replace(/^import\s+\{([^}]*)\}\s+from\s+["']react["'];?\s*\n?/m, (m, names) => {
+        return `const { ${names.trim()} } = React;\n`;
+      });
+      // Remove any remaining default React import
+      source = source.replace(/^import\s+React\s*,?\s*(\{[^}]*\})?\s*from\s+["']react["'];?\s*\n?/gm, (m, named) => {
+        return named ? `const ${named} = React;\n` : '';
+      });
 
-      // Convert `export default function Name(...) {}` into a global function
-      source = source.replace(/^export\s+default\s+function\s+([A-Za-z0-9_]+)\s*\(/m, 'function $1(');
-      const match = source.match(/^function\s+([A-Za-z0-9_]+)\s*\(/m);
-      if (match) {
-        const name = match[1];
-        source += `\nwindow.${name} = ${name};`;
+      // Convert `export default function Name(...) {}` — capture the exported name
+      let exportedName = null;
+      source = source.replace(/^export\s+default\s+function\s+([A-Za-z0-9_]+)\s*\(/m, (m, name) => {
+        exportedName = name;
+        return `function ${name}(`;
+      });
+      if (exportedName) {
+        source += `\nwindow.FrenchSaucesApp = ${exportedName};`;
       }
 
       // Handle `export default Identifier;`
-      source = source.replace(/export\s+default\s+([A-Za-z0-9_]+);/g, (m, id) => `window.${id} = ${id};`);
+      source = source.replace(/export\s+default\s+([A-Za-z0-9_]+);/g, (m, id) => `window.FrenchSaucesApp = ${id};`);
 
       // Handle `export default (...) => {}` (assign to window.FrenchSaucesApp)
       source = source.replace(/export\s+default\s*\(/g, 'window.FrenchSaucesApp = (');
@@ -96,25 +104,44 @@
       return source;
     }
 
+    function injectAndRun(source) {
+      try {
+        const transformed = Babel.transform(transformSource(source), {
+          presets: ['env', 'react']
+        }).code;
+        // eslint-disable-next-line no-new-func
+        new Function(transformed)();
+        setTimeout(waitForApp, 100);
+      } catch (e) {
+        setNotice('Babel error: ' + e.message, { error: true, showSpinner: false });
+        console.error(e);
+      }
+    }
+
     fileInput.addEventListener('change', (event) => {
       const file = event.target.files?.[0];
       if (!file) return;
       setNotice('Loading file...', { showSpinner: true });
       const reader = new FileReader();
-      reader.onload = () => {
-        const script = document.createElement('script');
-        script.type = 'text/babel';
-        script.setAttribute('data-presets', 'env,react');
-        script.textContent = transformSource(reader.result);
-        document.body.appendChild(script);
-        setTimeout(waitForApp, 100);
-      };
+      reader.onload = () => injectAndRun(reader.result);
       reader.onerror = () => setNotice('Failed to read file.', { error: true, showSpinner: false });
       reader.readAsText(file);
     });
 
-    // Show initial instructions
-    setNotice('Click "Open local .jsx file" to load the app.', { showSpinner: false });
-  </script>
+    // Auto-load the JSX file from the server if available
+    async function autoLoad() {
+      const jsxFile = 'french-sauces-app (9).jsx';
+      try {
+        setNotice('Auto-loading app from server…', { showSpinner: true });
+        const res = await fetch(jsxFile);
+        if (!res.ok) throw new Error('Not found');
+        const source = await res.text();
+        injectAndRun(source);
+      } catch (e) {
+        setNotice('Click "Open local .jsx file" to load the app.', { showSpinner: false });
+      }
+    }
+    autoLoad();
+</script>
 </body>
 </html>
