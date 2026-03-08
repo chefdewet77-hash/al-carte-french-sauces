@@ -15973,8 +15973,8 @@ export default function SaucierApp() {
       {showShop && (
         <div className="overlay" onClick={() => setShowShop(false)}>
           <div className="panel" onClick={e => e.stopPropagation()}>
-            <div style={{ padding:"20px 22px", borderBottom:"1px solid #e0e8f4", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-              <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:18, color:"#1a3060" }}>Shopping List</h2>
+            <div style={{ padding:"20px 22px", borderBottom:"1px solid #e4dfd4", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:18, color:"#1a3060" }}>🛒 Shopping List</h2>
               <button className="bk" onClick={() => setShowShop(false)}>✕</button>
             </div>
             {shopList.size === 0 ? (
@@ -15984,7 +15984,7 @@ export default function SaucierApp() {
             ) : (
               <>
                 {/* Sauce tags in list */}
-                <div style={{ padding:"14px 22px", borderBottom:"1px solid #edf2f9", display:"flex", flexWrap:"wrap", gap:6 }}>
+                <div style={{ padding:"14px 22px", borderBottom:"1px solid #ede8e2", display:"flex", flexWrap:"wrap", gap:6 }}>
                   {[...shopList].map(id => {
                     const s = SAUCES.find(x => x.id === id);
                     return s ? (
@@ -16012,7 +16012,7 @@ export default function SaucierApp() {
                   {shopIngredients.map((ing, i) => (
                     <div
                       key={i}
-                      style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", padding:"9px 22px", borderBottom:"1px solid #f0f5fb", gap:12 }}
+                      style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", padding:"9px 22px", borderBottom:"1px solid #ede8e2", gap:12 }}
                     >
                       <div>
                         <div style={{ fontFamily:"'Crimson Text',serif", fontSize:15, color:"#1a2540" }}>{ing.name}</div>
@@ -16028,7 +16028,7 @@ export default function SaucierApp() {
                     </div>
                   ))}
                 </div>
-                <div style={{ padding:"14px 22px", borderTop:"1px solid #e0e8f4", display:"flex", gap:8 }}>
+                <div style={{ padding:"14px 22px", borderTop:"1px solid #e4dfd4", display:"flex", gap:8 }}>
                   <button className="fb" onClick={() => setIsImperial(!isImperial)} style={{ flex:1 }}>
                     {isImperial ? "→ Metric" : "→ Imperial"}
                   </button>
@@ -16567,9 +16567,34 @@ export default function SaucierApp() {
               </div>
             ) : null;
           })()}
+          {/* Prev / Next in category */}
+          {(() => {
+            const catList = SAUCES.filter(s => s.category === sauce.category);
+            const idx = catList.findIndex(s => s.id === sauce.id);
+            const prev = idx > 0 ? catList[idx-1] : null;
+            const next = idx < catList.length-1 ? catList[idx+1] : null;
+            return (prev || next) ? (
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+                {prev ? (
+                  <button onClick={() => navigateTo(prev.id)} style={{ background:"none", border:"1px solid #e4dfd4", borderRadius:8, padding:"5px 12px", cursor:"pointer", fontFamily:"'Crimson Text',serif", fontSize:13, color:"#8898b0", display:"flex", alignItems:"center", gap:6 }}>
+                    ← <span style={{ color:prev.accent, fontStyle:"italic" }}>{prev.name}</span>
+                  </button>
+                ) : <div />}
+                <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#c0ccd8" }}>
+                  {idx+1} / {catList.length} in {CATEGORIES[sauce.category]?.label}
+                </span>
+                {next ? (
+                  <button onClick={() => navigateTo(next.id)} style={{ background:"none", border:"1px solid #e4dfd4", borderRadius:8, padding:"5px 12px", cursor:"pointer", fontFamily:"'Crimson Text',serif", fontSize:13, color:"#8898b0", display:"flex", alignItems:"center", gap:6 }}>
+                    <span style={{ color:next.accent, fontStyle:"italic" }}>{next.name}</span> →
+                  </button>
+                ) : <div />}
+              </div>
+            ) : null;
+          })()}
+
           {/* Hero */}
-          <div style={{ background:"#fff", border:"1px solid #cdd8ea", borderRadius:12, padding:"22px 24px", marginBottom:18, position:"relative", overflow:"hidden" }}>
-            <div style={{ position:"absolute", top:0, left:0, right:0, height:3, background:`linear-gradient(90deg,${sauce.accent} 0%,${sauce.accent}44 70%,transparent 100%)` }} />
+          <div style={{ background:"#fdfcf9", border:"1px solid #e4dfd4", borderRadius:14, padding:"22px 24px 22px 28px", marginBottom:18, position:"relative", overflow:"hidden", boxShadow:"0 4px 20px rgba(20,40,80,.06)" }}>
+            <div style={{ position:"absolute", top:12, left:0, bottom:12, width:4, background:`linear-gradient(to bottom,${sauce.accent},${sauce.accent}88)`, borderRadius:"0 2px 2px 0" }} />
 
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:10 }}>
               <div style={{ flex:1, minWidth:0 }}>
@@ -16651,8 +16676,8 @@ export default function SaucierApp() {
                 <div style={{ marginTop:10, display:"flex", gap:5, flexWrap:"wrap", alignItems:"center" }}>
                   <span style={{ fontSize:11, color:"#a0b4c8", fontFamily:"'Crimson Text',serif" }}>Techniques:</span>
                   {techs.map(t => (
-                    <span key={t} className="pill" style={{ background:"#f8f2ff", color:"#7050a8", border:"1px solid #d8c8f0", cursor:"pointer" }} onClick={() => { setTechFilter(t); setSelected(null); }}>
-                      {t.replace("_tech","").replace(/_/g," ")}
+                    <span key={t} className="pill" style={{ background:"#f8f2ff", color:"#7050a8", border:"1px solid #d8c8f0", cursor:"pointer" }} onClick={() => { setTechFilter(t); setShowFilters(true); setSelected(null); }}>
+                      {TECH_LABELS[t] ?? t.replace("_tech","").replace(/_/g," ")}
                     </span>
                   ))}
                 </div>
@@ -16668,7 +16693,7 @@ export default function SaucierApp() {
           </div>
 
           {/* Tabs */}
-          <div style={{ borderBottom:"1px solid #cdd8ea", marginBottom:18, display:"flex", alignItems:"center" }}>
+          <div style={{ borderBottom:"1px solid #e4dfd4", marginBottom:18, display:"flex", alignItems:"center" }}>
             <div style={{ flex:1, display:"flex" }}>
             {["ingredients","method","notes"].map(t => (
               <button key={t} className={`tb ${activeTab===t?"on":""}`} onClick={() => setActiveTab(t)}>
@@ -16694,9 +16719,9 @@ export default function SaucierApp() {
                 <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:16, color:"#1a3060", fontStyle:"italic" }}>Ingredients</h3>
                 <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
                   {/* Metric/Imperial */}
-                  <div style={{ display:"flex", gap:2, background:"#eef2f8", borderRadius:20, padding:3 }}>
+                  <div style={{ display:"flex", gap:2, background:"#ece8e0", borderRadius:20, padding:3 }}>
                     {[["Metric", false],["Imperial", true]].map(([label, val]) => (
-                      <button key={label} onClick={() => setIsImperial(val)} style={{ background: isImperial===val ? "#fff" : "transparent", border: isImperial===val ? "1px solid #cdd8ea" : "1px solid transparent", color: isImperial===val ? "#2060b0" : "#8898b0", cursor:"pointer", padding:"4px 12px", borderRadius:16, fontFamily:"'Crimson Text',serif", fontSize:13, transition:"all .15s" }}>{label}</button>
+                      <button key={label} onClick={() => setIsImperial(val)} style={{ background: isImperial===val ? "#fff" : "transparent", border: isImperial===val ? "1px solid #ddd8d0" : "1px solid transparent", color: isImperial===val ? "#1a3060" : "#8898b0", cursor:"pointer", padding:"4px 12px", borderRadius:16, fontFamily:"'Crimson Text',serif", fontSize:13, transition:"all .15s" }}>{label}</button>
                     ))}
                   </div>
                   {/* Servings */}
@@ -16716,14 +16741,14 @@ export default function SaucierApp() {
                   Scaled ×{formatNum(scale)} · base recipe serves {baseServings}
                 </div>
               )}
-              <div style={{ background:"#fff", border:"1px solid #cdd8ea", borderRadius:10, overflow:"hidden" }}>
+              <div style={{ background:"#fdfcf9", border:"1px solid #e4dfd4", borderRadius:12, overflow:"hidden" }}>
                 {sauce.ingredients.map((ing, i) => (
                   <div
                     key={i}
-                    style={{ display:"flex", justifyContent:"space-between", padding:"11px 18px", borderBottom: i < sauce.ingredients.length-1 ? "1px solid #edf2f9":"none", alignItems:"center", transition:"background .1s", cursor:"pointer" }}
+                    style={{ display:"flex", justifyContent:"space-between", padding:"11px 18px", borderBottom: i < sauce.ingredients.length-1 ? "1px solid #ede8e2":"none", alignItems:"center", transition:"background .1s", cursor:"pointer" }}
                     onClick={() => setIngSearch(ing.name)}
                     title={`Find all sauces using ${ing.name}`}
-                    onMouseEnter={e => e.currentTarget.style.background = "#f7f9fd"}
+                    onMouseEnter={e => e.currentTarget.style.background = "#f7f2ea"}
                     onMouseLeave={e => e.currentTarget.style.background = ""}
                   >
                     <span style={{ fontFamily:"'Crimson Text',serif", fontSize:16, color:"#1a2540" }}>{ing.name}</span>
@@ -16828,7 +16853,7 @@ export default function SaucierApp() {
             const children = SAUCES.filter(s => s.parent === sauce.id);
             if (!parent && siblings.length === 0 && children.length === 0) return null;
             return (
-              <div style={{ marginTop:24, paddingTop:18, borderTop:"1px solid #e0e8f4" }}>
+              <div style={{ marginTop:24, paddingTop:18, borderTop:"1px solid #e4dfd4" }}>
                 <p style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#b0bcd0", letterSpacing:"1px", textTransform:"uppercase", marginBottom:12 }}>Related sauces</p>
                 {parent && (
                   <div style={{ marginBottom:10 }}>
@@ -16862,9 +16887,47 @@ export default function SaucierApp() {
             );
           })()}
 
+          {/* More in category */}
+          {(() => {
+            const more = SAUCES.filter(s => s.category === sauce.category && s.id !== sauce.id);
+            if (more.length === 0) return null;
+            const cat = CATEGORIES[sauce.category];
+            return (
+              <div style={{ marginTop:28, paddingTop:20, borderTop:"1px solid #e4dfd4" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:14 }}>
+                  <span style={{ fontSize:15 }}>{cat?.icon}</span>
+                  <p style={{ fontFamily:"'Playfair Display',serif", fontSize:14, color:cat?.color, fontStyle:"italic", fontWeight:600 }}>More {cat?.label}</p>
+                  <div style={{ flex:1, height:1, background:`linear-gradient(to right,${cat?.color}44,transparent)` }} />
+                  <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#c0ccd8" }}>{more.length} more</span>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(180px,1fr))", gap:8 }}>
+                  {more.slice(0, 6).map(s => (
+                    <div
+                      key={s.id}
+                      onClick={() => navigateTo(s.id)}
+                      style={{ background:"#fdfcf9", border:`1px solid ${s.accent}33`, borderRadius:10, padding:"10px 14px 10px 16px", cursor:"pointer", position:"relative", overflow:"hidden", transition:"all .15s" }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = s.accent+"88"; e.currentTarget.style.boxShadow = `0 4px 14px ${s.accent}22`; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = s.accent+"33"; e.currentTarget.style.boxShadow = "none"; }}
+                    >
+                      <div style={{ position:"absolute", top:6, left:0, bottom:6, width:3, background:s.accent, borderRadius:"0 2px 2px 0" }} />
+                      <div style={{ fontFamily:"'Playfair Display',serif", fontSize:13, color:"#1a2540", fontWeight:600, marginBottom:2 }}>{s.name}</div>
+                      <div style={{ fontFamily:"'Playfair Display',serif", fontStyle:"italic", fontSize:11, color:s.accent }}>{s.tagline}</div>
+                      <div style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#b0bcc8", marginTop:4 }}>⏱ {s.time} · {s.difficulty}</div>
+                    </div>
+                  ))}
+                </div>
+                {more.length > 6 && (
+                  <button onClick={() => { setCatFilter(sauce.category); setSelected(null); }} style={{ marginTop:10, background:"none", border:"1px solid #e4dfd4", borderRadius:8, padding:"5px 14px", cursor:"pointer", fontFamily:"'Crimson Text',serif", fontSize:12, color:"#8898b0" }}>
+                    View all {more.length + 1} {cat?.label} →
+                  </button>
+                )}
+              </div>
+            );
+          })()}
+
           {/* Recently viewed */}
           {recentlyViewed.filter(id => id !== selected).length > 0 && (
-            <div style={{ marginTop:28, paddingTop:18, borderTop:"1px solid #e0e8f4" }}>
+            <div style={{ marginTop:28, paddingTop:18, borderTop:"1px solid #e4dfd4" }}>
               <p style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#b0bcd0", letterSpacing:"1px", textTransform:"uppercase", marginBottom:10 }}>Recently viewed</p>
               <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                 {recentlyViewed.filter(id => id !== selected).map(id => {
@@ -16894,7 +16957,7 @@ export default function SaucierApp() {
                 { label:"Rated",      value:Object.keys(ratings).length,                      color:"#b07010", icon:"⭐" },
                 { label:"Mother",     value:SAUCES.filter(s=>s.category==="mother").length,   color:"#1a4a90", icon:"👑" },
               ].map(stat => (
-                <div key={stat.label} style={{ background:"#fff", border:"1px solid #dde8f4", borderRadius:10, padding:"14px 16px", textAlign:"center" }}>
+                <div key={stat.label} style={{ background:"#fdfcf9", border:"1px solid #e4dfd4", borderRadius:12, padding:"14px 16px", textAlign:"center" }}>
                   <div style={{ fontSize:20, marginBottom:4 }}>{stat.icon}</div>
                   <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:700, color:stat.color, lineHeight:1 }}>{stat.value}</div>
                   <div style={{ fontFamily:"'Crimson Text',serif", fontSize:12, color:"#a0b0c8", marginTop:4 }}>{stat.label}</div>
@@ -16904,14 +16967,14 @@ export default function SaucierApp() {
 
             {/* Cooking progress bar */}
             {cookedIds.size > 0 && (
-              <div style={{ marginBottom:16, background:"#fff", border:"1px solid #dde8f4", borderRadius:10, padding:"14px 18px" }}>
+              <div style={{ marginBottom:16, background:"#fdfcf9", border:"1px solid #e4dfd4", borderRadius:12, padding:"14px 18px" }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:8 }}>
                   <span style={{ fontFamily:"'Crimson Text',serif", fontSize:13, color:"#5a7080" }}>Cooking journey</span>
                   <span style={{ fontFamily:"'Playfair Display',serif", fontSize:13, color:"#2a9858", fontWeight:600 }}>
                     {cookedIds.size} / {SAUCES.length} — {Math.round(cookedIds.size / SAUCES.length * 100)}%
                   </span>
                 </div>
-                <div style={{ height:8, background:"#e8f0f8", borderRadius:4, overflow:"hidden" }}>
+                <div style={{ height:8, background:"#ede8e0", borderRadius:4, overflow:"hidden" }}>
                   <div style={{ height:"100%", width:`${cookedIds.size / SAUCES.length * 100}%`, background:"linear-gradient(90deg,#7dd898,#2a9858)", borderRadius:4, transition:"width .5s ease" }} />
                 </div>
                 {cookedIds.size >= SAUCES.length && (
@@ -16924,7 +16987,7 @@ export default function SaucierApp() {
 
             {/* Achievements trophy case */}
             {achievements.length > 0 && (
-              <div style={{ marginBottom:16, background:"#fff", border:"1px solid #dde8f4", borderRadius:10, padding:"14px 18px" }}>
+              <div style={{ marginBottom:16, background:"#fdfcf9", border:"1px solid #e4dfd4", borderRadius:12, padding:"14px 18px" }}>
                 <p style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#b0bcd0", letterSpacing:"1px", textTransform:"uppercase", marginBottom:10 }}>
                   Achievements · {achievements.length} / {ACHIEVEMENTS.length}
                 </p>
@@ -16945,7 +17008,7 @@ export default function SaucierApp() {
             {/* Sauce of the Day */}
             <div
               onClick={() => navigateTo(sauceOfDay.id)}
-              style={{ background:`linear-gradient(135deg,${sauceOfDay.accent}18 0%,#fff 60%)`, border:`1px solid ${sauceOfDay.accent}44`, borderRadius:12, padding:"16px 20px", marginBottom:24, cursor:"pointer", display:"flex", alignItems:"center", gap:16, position:"relative", overflow:"hidden", transition:"all .2s" }}
+              style={{ background:`linear-gradient(135deg,${sauceOfDay.accent}22 0%,#fdfcf9 55%)`, border:`1px solid ${sauceOfDay.accent}55`, borderRadius:14, padding:"16px 20px", marginBottom:24, cursor:"pointer", display:"flex", alignItems:"center", gap:16, position:"relative", overflow:"hidden", transition:"all .2s" }}
               onMouseEnter={e => e.currentTarget.style.boxShadow = `0 4px 20px ${sauceOfDay.accent}30`}
               onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
             >
@@ -17228,7 +17291,7 @@ function SauceRow({ sauce, isFav, inShop, isCooked, hasNote, rating, flavor, onF
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 18px", borderBottom: isLast ? "none" : "1px solid #eef3fa", cursor:"pointer", background: hovered ? "#f7f9fd" : "#fff", transition:"background .12s", position:"relative" }}
+      style={{ display:"flex", alignItems:"center", gap:12, padding:"12px 18px", borderBottom: isLast ? "none" : "1px solid #ede8e2", cursor:"pointer", background: hovered ? "#f7f2ea" : "#fdfcf9", transition:"background .12s", position:"relative" }}
     >
       <div style={{ width:4, height:36, borderRadius:2, background:sauce.accent, flexShrink:0 }} />
       <div style={{ flex:1, minWidth:0 }}>
