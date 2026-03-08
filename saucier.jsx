@@ -15255,28 +15255,28 @@ function getAncestry(sauce) {
 }
 
 const CATEGORIES = {
-  mother:   { label: "Mother Sauces",          color: "#1a4a90" },
-  classic:  { label: "Essential Classics",     color: "#1878b0" },
-  daughter: { label: "Daughter Sauces",        color: "#148898" },
-  cold:     { label: "Cold Sauces & Dressings",color: "#1878a8" },
-  stock:    { label: "Stocks & Bases",         color: "#1a5888" },
-  fish:     { label: "Fish Dishes",            color: "#2070a8" },
-  chicken:  { label: "Poultry & Game",          color: "#8a4a18" },
-  beef:     { label: "Beef & Veal",             color: "#6a1a1a" },
-  shellfish:{ label: "Shellfish & Crustaceans", color: "#1a6878" },
-  soup:     { label: "Soups & Potages",         color: "#7a4010" },
-  vegetable:{ label: "Vegetables & Gratins",    color: "#3a7830" },
-  potato:   { label: "Potato Dishes",           color: "#c8a030" },
-  veal:     { label: "Veal",                    color: "#c8b880" },
-  pork:     { label: "Pork",                    color: "#c87040" },
-  dessert:  { label: "Desserts & Pâtisserie",   color: "#8a4890" },
-  eggs:     { label: "Egg Dishes",              color: "#c8a828" },
-  bread:    { label: "Bread & Viennoiserie",    color: "#8a6020" },
-  charcuterie: { label: "Charcuterie & Terrines", color: "#6a2010" },
-  game:     { label: "Game & Offal",            color: "#3a1808" },
-  cheese:   { label: "Cheese & Dairy",          color: "#c8b040" },
-  tart:     { label: "Tarts & Galettes",        color: "#8a4890" },
-  rice:     { label: "Rice, Grains & Légumes",  color: "#4a5820" },
+  mother:   { label: "Mother Sauces",           icon: "👑", color: "#1a4a90" },
+  classic:  { label: "Essential Classics",      icon: "⭐", color: "#1878b0" },
+  daughter: { label: "Daughter Sauces",         icon: "🌿", color: "#148898" },
+  cold:     { label: "Cold Sauces & Dressings", icon: "❄️", color: "#1878a8" },
+  stock:    { label: "Stocks & Bases",          icon: "🍲", color: "#1a5888" },
+  fish:     { label: "Fish Dishes",             icon: "🐟", color: "#2070a8" },
+  chicken:  { label: "Poultry & Game",          icon: "🍗", color: "#8a4a18" },
+  beef:     { label: "Beef & Veal",             icon: "🥩", color: "#6a1a1a" },
+  shellfish:{ label: "Shellfish & Crustaceans", icon: "🦞", color: "#1a6878" },
+  soup:     { label: "Soups & Potages",         icon: "🍵", color: "#7a4010" },
+  vegetable:{ label: "Vegetables & Gratins",    icon: "🥦", color: "#3a7830" },
+  potato:   { label: "Potato Dishes",           icon: "🥔", color: "#c8a030" },
+  veal:     { label: "Veal",                    icon: "🫕", color: "#c8b880" },
+  pork:     { label: "Pork",                    icon: "🥓", color: "#c87040" },
+  dessert:  { label: "Desserts & Pâtisserie",   icon: "🍮", color: "#8a4890" },
+  eggs:     { label: "Egg Dishes",              icon: "🥚", color: "#c8a828" },
+  bread:    { label: "Bread & Viennoiserie",    icon: "🥐", color: "#8a6020" },
+  charcuterie:{ label: "Charcuterie & Terrines",icon: "🧆", color: "#6a2010" },
+  game:     { label: "Game & Offal",            icon: "🦌", color: "#3a1808" },
+  cheese:   { label: "Cheese & Dairy",          icon: "🧀", color: "#c8b040" },
+  tart:     { label: "Tarts & Galettes",        icon: "🥧", color: "#8a4890" },
+  rice:     { label: "Rice, Grains & Légumes",  icon: "🌾", color: "#4a5820" },
 };
 
 function getDifficultyColor(d) {
@@ -15583,6 +15583,7 @@ export default function SaucierApp() {
   const [showTechGuide, setShowTechGuide] = useState(false);
   const [selectedTech,  setSelectedTech]  = useState(null);
   const [techCatFilter, setTechCatFilter] = useState("all");
+  const [showFilters,   setShowFilters]   = useState(false);
   const searchRef = useRef(null);
   const noteRef   = useRef(null);
   const timerRef  = useRef(null);
@@ -15624,6 +15625,10 @@ export default function SaucierApp() {
       if (!inInput && !e.ctrlKey && !e.metaKey && e.key === "t") {
         e.preventDefault();
         setShowTechGuide(g => { if (!g) { setSelected(null); setShowTree(false); } return !g; });
+      }
+      if (!inInput && !e.ctrlKey && !e.metaKey && e.key === "f") {
+        e.preventDefault();
+        setShowFilters(f => !f);
       }
       if (cookingMode && sauce) {
         if (e.key === "ArrowRight" || e.key === "ArrowDown") setCookStep(s => Math.min(s + 1, sauce.steps.length - 1));
@@ -15759,6 +15764,7 @@ export default function SaucierApp() {
     const matchF = flavorFilter === "all" || (allFlavorProfiles[s.id] || []).includes(flavorFilter);
     return matchQ && matchC && matchD && matchT && matchF;
   });
+  const activeFilterCount = [catFilter, diffFilter, techFilter, flavorFilter].filter(v => v !== "all").length;
 
   const DIFF_ORDER = { "Easy": 0, "Medium": 1, "Advanced": 2 };
   function timeToMin(t) { const m = t.match(/(\d+\.?\d*)/); return m ? parseFloat(m[1]) * (t.includes("hr") ? 60 : 1) : 0; }
@@ -15802,49 +15808,82 @@ export default function SaucierApp() {
   };
 
   return (
-    <div style={{ fontFamily:"'Georgia','Times New Roman',serif", background: darkMode ? "#111827" : "#eef2f8", minHeight:"100vh", color: darkMode ? "#e2e8f0" : "#1a2540", transition:"background .3s, color .3s" }}>
+    <div style={{ fontFamily:"'Georgia','Times New Roman',serif", background: darkMode ? "#0d1520" : "#f5f3ee", minHeight:"100vh", color: darkMode ? "#d8e4f0" : "#1a2540", transition:"background .3s, color .3s" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
-        ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#dde6f0}::-webkit-scrollbar-thumb{background:#9ab2cc;border-radius:3px}
-        .sc{background:#fff;border:1px solid #cdd8ea;border-radius:10px;padding:15px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden}
-        .sc:hover{border-color:#4878c0;transform:translateY(-3px);box-shadow:0 10px 32px rgba(30,70,160,.13)}
-        .sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--ac);border-radius:10px 10px 0 0}
+        ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#e8e4dc}::-webkit-scrollbar-thumb{background:#b0a898;border-radius:3px}
+
+        /* ── Cards ─────────────────────────────── */
+        .sc{background:#fff;border:1px solid #e4e0d8;border-radius:14px;padding:18px;cursor:pointer;transition:all .2s cubic-bezier(.22,.68,0,1.2);position:relative;overflow:hidden}
+        .sc:hover{border-color:#8aaad8;transform:translateY(-3px);box-shadow:0 14px 40px rgba(20,50,120,.11)}
+        .sc::before{content:'';position:absolute;top:0;left:0;bottom:0;width:4px;background:var(--ac);border-radius:14px 0 0 14px}
+
+        /* ── Typography helpers ─────────────────── */
         .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-family:'Crimson Text',serif;letter-spacing:.4px}
+
+        /* ── Tab buttons (detail view) ──────────── */
         .tb{background:none;border:none;color:#7888a8;cursor:pointer;padding:8px 16px;font-family:'Crimson Text',serif;font-size:15px;border-bottom:2px solid transparent;transition:all .2s}
-        .tb.on{color:#2060b0;border-bottom-color:#2060b0}
+        .tb.on{color:#1a3878;border-bottom-color:#3a6cbf}
         .tb:hover{color:#1a2540}
-        .fb{background:#fff;border:1px solid #ccd6e8;color:#7888a8;cursor:pointer;padding:5px 13px;border-radius:20px;font-family:'Crimson Text',serif;font-size:13px;transition:all .2s;white-space:nowrap}
-        .fb.on{background:#e4edf9;border-color:#4878c0;color:#2060b0;font-weight:600}
-        .fb:hover:not(.on){border-color:#8aaad8;color:#1a2540}
-        .mb{background:#fff;border:1px solid #cdd8ea;color:#2060b0;cursor:pointer;width:28px;height:28px;border-radius:5px;font-size:17px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
-        .mb:hover:not(:disabled){background:#e4edf9;border-color:#4878c0}
+
+        /* ── Form / action buttons ──────────────── */
+        .fb{background:#fff;border:1px solid #d8d0c8;color:#6878a0;cursor:pointer;padding:5px 14px;border-radius:20px;font-family:'Crimson Text',serif;font-size:13px;transition:all .2s;white-space:nowrap}
+        .fb.on{background:#e8f0fb;border-color:#4878c0;color:#1a4090;font-weight:600}
+        .fb:hover:not(.on){border-color:#8aaad8;color:#1a2540;background:#f4f6fc}
+        .mb{background:#fff;border:1px solid #d8d0c8;color:#2060b0;cursor:pointer;width:28px;height:28px;border-radius:6px;font-size:17px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+        .mb:hover:not(:disabled){background:#e8f0fb;border-color:#4878c0}
         .mb:disabled{opacity:.25;cursor:default}
-        .ctag{display:inline-block;margin:3px;padding:3px 11px;background:#e8f4fb;border:1px solid #9cc8e0;border-radius:4px;font-size:13px;cursor:pointer;color:#1870a0;font-family:'Crimson Text',serif;transition:all .15s}
-        .ctag:hover{background:#d0e8f5;border-color:#2890c0}
-        .tn{background:#fff;border:1px solid #cdd8ea;border-radius:6px;padding:6px 12px;cursor:pointer;transition:all .2s;display:inline-block;font-family:'Crimson Text',serif;font-size:13px;color:#3a5070}
+        .ctag{display:inline-block;margin:3px;padding:3px 11px;background:#eaf4fb;border:1px solid #9cc8e0;border-radius:6px;font-size:13px;cursor:pointer;color:#1870a0;font-family:'Crimson Text',serif;transition:all .15s}
+        .ctag:hover{background:#d4eaf5;border-color:#2890c0}
+        .tn{background:#fff;border:1px solid #e0dcd4;border-radius:8px;padding:5px 12px;cursor:pointer;transition:all .2s;display:inline-block;font-family:'Crimson Text',serif;font-size:13px;color:#3a5070}
         .tn:hover{border-color:#4878c0;color:#2060b0;background:#f0f6fd}
-        .bk{background:none;border:1px solid #cdd8ea;color:#7888a8;cursor:pointer;padding:5px 13px;border-radius:20px;font-family:'Crimson Text',serif;font-size:13px;transition:all .2s}
-        .bk:hover{border-color:#4878c0;color:#2060b0}
-        .act{background:none;border:1px solid transparent;cursor:pointer;border-radius:6px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
-        .act:hover{background:#e8f2fb;border-color:#9ac0e0}
-        input{background:#fff;border:1px solid #cdd8ea;color:#1a2540;padding:8px 14px;border-radius:20px;font-family:'Crimson Text',serif;font-size:15px;outline:none;transition:border-color .2s;width:100%}
-        input:focus{border-color:#4878c0;box-shadow:0 0 0 3px rgba(72,120,192,.1)}
-        input::placeholder{color:#a0b4c8}
-        .overlay{position:fixed;inset:0;background:rgba(20,35,70,.45);z-index:200;display:flex;justify-content:flex-end;animation:fadeIn .2s}
-        .panel{background:#fff;width:min(440px,100vw);height:100vh;overflow-y:auto;box-shadow:-8px 0 32px rgba(0,0,0,.15);animation:slideIn .25s}
+
+        /* ── Header nav buttons ─────────────────── */
+        .bk{background:#fff;border:1px solid #dcd8d0;color:#6070a0;cursor:pointer;padding:5px 14px;border-radius:20px;font-family:'Crimson Text',serif;font-size:13px;transition:all .18s;white-space:nowrap}
+        .bk:hover{border-color:#7aacdc;color:#1a3060;background:#f0f4fc}
+        .bk.on{background:#1a3060;color:#e8eef8;border-color:#1a3060}
+
+        /* ── Icon action buttons ────────────────── */
+        .act{background:none;border:1px solid transparent;cursor:pointer;border-radius:8px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+        .act:hover{background:#eaf2fb;border-color:#9ac0e0}
+
+        /* ── Search input ───────────────────────── */
+        input{background:#f8f7f4;border:1.5px solid #e0dcd4;color:#1a2540;padding:9px 16px;border-radius:22px;font-family:'Crimson Text',serif;font-size:15px;outline:none;transition:all .2s;width:100%}
+        input:focus{background:#fff;border-color:#4878c0;box-shadow:0 0 0 3px rgba(72,120,192,.12)}
+        input::placeholder{color:#b0a898}
+
+        /* ── Slide-over panels ──────────────────── */
+        .overlay{position:fixed;inset:0;background:rgba(10,20,50,.5);z-index:200;display:flex;justify-content:flex-end;animation:fadeIn .2s}
+        .panel{background:#fff;width:min(460px,100vw);height:100vh;overflow-y:auto;box-shadow:-10px 0 40px rgba(0,0,0,.18);animation:slideIn .25s}
+
+        /* ── Animations ─────────────────────────── */
         @keyframes fadeIn{from{opacity:0}to{opacity:1}}
         @keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
-        .badge{display:inline-flex;align-items:center;justify-content:center;background:#2060b0;color:#fff;border-radius:10px;font-size:10px;font-family:'Crimson Text',serif;min-width:18px;height:18px;padding:0 4px;line-height:1}
-        .cat-chip{background:#fff;border:1px solid #cdd8ea;cursor:pointer;padding:5px 14px;border-radius:20px;font-family:'Crimson Text',serif;font-size:13px;color:#6070a0;transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap}
-        .cat-chip.on{border-color:#4878c0;color:#2060b0;background:#e4edf9}
-        .cat-chip:hover:not(.on){border-color:#9ab4d0;color:#1a2540}
+        @keyframes popIn{from{opacity:0;transform:scale(.94) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+        /* ── Badges ─────────────────────────────── */
+        .badge{display:inline-flex;align-items:center;justify-content:center;background:#2868cc;color:#fff;border-radius:10px;font-size:10px;font-family:'Crimson Text',serif;min-width:18px;height:18px;padding:0 4px;line-height:1}
+
+        /* ── Category chips ─────────────────────── */
+        .cat-chip{background:#fff;border:1px solid #dcd8d0;cursor:pointer;padding:4px 13px;border-radius:20px;font-family:'Crimson Text',serif;font-size:12.5px;color:#6070a0;transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap}
+        .cat-chip.on{border-color:#3a6cbf;color:#1a4090;background:#e8f0fb;font-weight:600}
+        .cat-chip:hover:not(.on){border-color:#9ab4d0;color:#1a3060;background:#f4f6fc}
+
+        /* ── Star rating ────────────────────────── */
         .star-btn{background:none;border:none;cursor:pointer;font-size:18px;padding:1px 2px;line-height:1;transition:transform .1s}
-        .star-btn:hover{transform:scale(1.25)}
+        .star-btn:hover{transform:scale(1.28)}
+
+        /* ── Filter panel ───────────────────────── */
+        .filter-panel{background:#fff;border:1px solid #e4e0d8;border-radius:14px;padding:16px 18px;margin-bottom:14px;animation:popIn .18s}
+
+        /* ── Toast notifications ────────────────── */
         .toast-enter{animation:toastIn .3s cubic-bezier(.175,.885,.32,1.275)}
         .toast-exit{animation:toastOut .35s ease forwards}
         @keyframes toastIn{from{opacity:0;transform:translateX(80px) scale(.9)}to{opacity:1;transform:translateX(0) scale(1)}}
         @keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(80px)}}
+
+        /* ── Print ──────────────────────────────── */
         @media print{
           .no-print{display:none!important}
           body{background:#fff!important;color:#000!important;font-size:12pt}
@@ -15853,28 +15892,34 @@ export default function SaucierApp() {
           li,p{font-family:Georgia,serif!important;line-height:1.6}
           .sc{box-shadow:none!important;border:1px solid #ccc!important;page-break-inside:avoid}
         }
+
+        /* ── Dark mode overrides ────────────────── */
         ${darkMode ? `
-          .sc{background:#1e2a3e!important;border-color:#2d3f5a!important;color:#e2e8f0!important}
-          .sc:hover{border-color:#4878c0!important;box-shadow:0 10px 32px rgba(0,0,0,.4)!important}
-          .fb,.bk,.tb,.mb,.tn,.ctag,.cat-chip{background:#1e2a3e!important;border-color:#2d3f5a!important;color:#94aac4!important}
-          .fb.on,.cat-chip.on{background:#1a3060!important;border-color:#4878c0!important;color:#7ab4f0!important}
-          .overlay{background:rgba(0,0,0,.65)!important}
-          .panel{background:#111827!important}
-          input{background:#1e2a3e!important;border-color:#2d3f5a!important;color:#e2e8f0!important}
-          input::placeholder{color:#4a6080!important}
+          .sc{background:#192233!important;border-color:#263548!important}
+          .sc:hover{border-color:#4878c0!important;box-shadow:0 12px 36px rgba(0,0,0,.5)!important}
+          .filter-panel{background:#192233!important;border-color:#263548!important}
+          .fb,.bk,.tb,.mb,.tn,.ctag,.cat-chip{background:#192233!important;border-color:#263548!important;color:#8aa0c0!important}
+          .fb.on,.cat-chip.on,.bk.on{background:#1e3a6a!important;border-color:#4878c0!important;color:#80b4f0!important}
+          .overlay{background:rgba(0,0,0,.7)!important}
+          .panel{background:#0f1824!important;border-left:1px solid #263548}
+          input{background:#192233!important;border-color:#263548!important;color:#d8e4f0!important}
+          input:focus{background:#1e2a3e!important;border-color:#4878c0!important}
+          input::placeholder{color:#405570!important}
           .badge{background:#2a5090!important}
+          .tn{background:#192233!important;border-color:#263548!important;color:#7090b0!important}
+          .ctag{background:#1a3050!important;border-color:#2a4870!important;color:#6090c0!important}
         ` : ""}
       `}</style>
 
       {/* ─── Header ─── */}
-      <div className="no-print" style={{ background:"#fff", borderBottom:"1px solid #cdd8ea", padding:"12px 20px", position:"sticky", top:0, zIndex:100 }}>
+      <div className="no-print" style={{ background:"linear-gradient(to bottom, #fffef9, #faf8f2)", borderBottom:"1px solid #e4dfd4", boxShadow:"0 2px 12px rgba(20,40,80,.06)", padding:"10px 20px", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ maxWidth:980, margin:"0 auto", display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
           {/* Title */}
           <div style={{ display:"flex", alignItems:"baseline", gap:8, flexShrink:0 }}>
-            <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:19, fontWeight:700, color:"#1a3060", letterSpacing:"-.3px" }}>
-              Saucier
+            <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:20, fontWeight:700, color:"#1a3060", letterSpacing:"-.3px", display:"flex", alignItems:"baseline", gap:6 }}>
+              <span style={{ color:"#c8902a", fontSize:16, fontStyle:"italic" }}>✦</span> Saucier
             </h1>
-            <span style={{ color:"#b0c0d8", fontSize:11, fontFamily:"'Crimson Text',serif", fontStyle:"italic" }}>Les Sauces Françaises · {SAUCES.length}</span>
+            <span style={{ color:"#b8c8d8", fontSize:11, fontFamily:"'Crimson Text',serif", fontStyle:"italic" }}>Les Sauces Françaises · {SAUCES.length}</span>
           </div>
 
           {/* Search */}
@@ -16920,77 +16965,132 @@ export default function SaucierApp() {
             </>
           )}
 
-          {/* Filter bar */}
-          <div style={{ display:"flex", gap:8, marginBottom:8, flexWrap:"wrap", alignItems:"center" }}>
-            <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
-              {[["all","All"], ...(favorites.size>0?[["saved","♥ Saved"]]:[]), ["mother","Mother"], ["classic","Classics"], ["daughter","Daughters"], ["cold","Cold"], ["stock","Stocks"], ["fish","Fish"], ["chicken","Poultry"], ["beef","Beef"], ["veal","Veal"], ["pork","Pork"], ["shellfish","Shellfish"], ["soup","Soups"], ["vegetable","Vegetables"], ["potato","Potato"], ["dessert","Desserts"], ["eggs","Eggs"], ["bread","Bread"], ["charcuterie","Charcuterie"], ["game","Game"], ["cheese","Cheese"], ["tart","Tarts"], ["rice","Grains"]].map(([v,l]) => (
-                <button key={v} className={`cat-chip ${catFilter===v?"on":""}`} onClick={() => setCatFilter(v)}>{l}</button>
-              ))}
-            </div>
-            <div style={{ display:"flex", gap:5, marginLeft:"auto", flexWrap:"wrap" }}>
-              {[["all","All levels"],["Easy","Easy"],["Medium","Medium"],["Advanced","Advanced"]].map(([v,l]) => (
-                <button key={v} className={`fb ${diffFilter===v?"on":""}`} onClick={() => setDiffFilter(v)} style={{ fontSize:12, padding:"4px 11px" }}>{l}</button>
-              ))}
-            </div>
-          </div>
+          {/* ── Filter toolbar (always visible) ── */}
+          <div style={{ display:"flex", gap:7, alignItems:"center", marginBottom: showFilters ? 10 : 16, flexWrap:"wrap" }}>
+            {/* Toggle button */}
+            <button
+              className={`bk ${showFilters ? "on" : ""}`}
+              onClick={() => setShowFilters(f => !f)}
+              style={{ display:"flex", alignItems:"center", gap:5, fontFamily:"'Crimson Text',serif", fontWeight:600 }}
+            >
+              <span style={{ fontSize:13 }}>{showFilters ? "▲" : "⚙"}</span>
+              Filters
+              {activeFilterCount > 0 && (
+                <span style={{ background:"#1a3060", color:"#e8eef8", borderRadius:10, padding:"0 6px", fontSize:11, fontFamily:"sans-serif" }}>{activeFilterCount}</span>
+              )}
+            </button>
 
-          {/* Technique filter — all techniques */}
-          <div style={{ display:"flex", gap:5, marginBottom:8, flexWrap:"wrap", alignItems:"center" }}>
-            <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#b0bcd0", letterSpacing:".8px", textTransform:"uppercase", flexShrink:0 }}>Technique:</span>
-            {["all", ...Object.keys(TECHNIQUE_KEYWORDS)].map(t => (
-              <button
-                key={t}
-                onClick={() => setTechFilter(t)}
-                style={{ background: techFilter===t ? "#f0ecff" : "#fff", border:"1px solid", borderColor: techFilter===t ? "#9070d0" : "#cdd8ea", color: techFilter===t ? "#7050a8" : "#8898b0", cursor:"pointer", padding:"3px 10px", borderRadius:20, fontFamily:"'Crimson Text',serif", fontSize:12, transition:"all .15s", whiteSpace:"nowrap" }}
-              >
-                {t === "all" ? "All" : (TECH_LABELS[t] ?? t.replace("_tech","").replace(/_/g," "))}
+            {/* Active filter chips — quick-remove */}
+            {catFilter !== "all" && (
+              <button onClick={() => setCatFilter("all")} style={{ background:"#e8f0fe", border:"1px solid #b0c8f0", color:"#1a3060", cursor:"pointer", padding:"3px 10px", borderRadius:20, fontFamily:"'Crimson Text',serif", fontSize:12, display:"flex", alignItems:"center", gap:4 }}>
+                {catFilter === "saved" ? "♥ Saved" : catFilter.charAt(0).toUpperCase()+catFilter.slice(1)} <span style={{ opacity:.6, fontSize:11 }}>✕</span>
               </button>
-            ))}
-          </div>
-
-          {/* Flavour filter */}
-          <div style={{ display:"flex", gap:5, marginBottom:14, flexWrap:"wrap", alignItems:"center" }}>
-            <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#b0bcd0", letterSpacing:".8px", textTransform:"uppercase", flexShrink:0 }}>Flavour:</span>
-            {["all","Creamy","Rich","Tangy","Herby","Spicy","Umami","Sweet"].map(f => (
-              <button
-                key={f}
-                onClick={() => setFlavorFilter(f)}
-                style={{ background: flavorFilter===f ? "#fff8ee" : "#fff", border:"1px solid", borderColor: flavorFilter===f ? "#c89030" : "#cdd8ea", color: flavorFilter===f ? "#8a5810" : "#8898b0", cursor:"pointer", padding:"3px 10px", borderRadius:20, fontFamily:"'Crimson Text',serif", fontSize:12, transition:"all .15s", whiteSpace:"nowrap" }}
-              >
-                {f === "all" ? "All" : f}
+            )}
+            {diffFilter !== "all" && (
+              <button onClick={() => setDiffFilter("all")} style={{ background:"#e8f0fe", border:"1px solid #b0c8f0", color:"#1a3060", cursor:"pointer", padding:"3px 10px", borderRadius:20, fontFamily:"'Crimson Text',serif", fontSize:12, display:"flex", alignItems:"center", gap:4 }}>
+                {diffFilter} <span style={{ opacity:.6, fontSize:11 }}>✕</span>
               </button>
-            ))}
-          </div>
+            )}
+            {techFilter !== "all" && (
+              <button onClick={() => setTechFilter("all")} style={{ background:"#f0ecff", border:"1px solid #c0a8e8", color:"#5030a0", cursor:"pointer", padding:"3px 10px", borderRadius:20, fontFamily:"'Crimson Text',serif", fontSize:12, display:"flex", alignItems:"center", gap:4 }}>
+                {TECH_LABELS[techFilter] ?? techFilter.replace("_tech","").replace(/_/g," ")} <span style={{ opacity:.6, fontSize:11 }}>✕</span>
+              </button>
+            )}
+            {flavorFilter !== "all" && (
+              <button onClick={() => setFlavorFilter("all")} style={{ background:"#fff8ee", border:"1px solid #e8c870", color:"#8a5010", cursor:"pointer", padding:"3px 10px", borderRadius:20, fontFamily:"'Crimson Text',serif", fontSize:12, display:"flex", alignItems:"center", gap:4 }}>
+                {flavorFilter} <span style={{ opacity:.6, fontSize:11 }}>✕</span>
+              </button>
+            )}
+            {activeFilterCount > 1 && (
+              <button onClick={() => { setCatFilter("all"); setDiffFilter("all"); setTechFilter("all"); setFlavorFilter("all"); }} style={{ background:"none", border:"none", color:"#a8b8c8", cursor:"pointer", fontFamily:"'Crimson Text',serif", fontSize:12, textDecoration:"underline", padding:"3px 6px" }}>
+                Clear all
+              </button>
+            )}
 
-          {/* Result count + sort + view toggle */}
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18, flexWrap:"wrap", gap:8 }}>
-            <p style={{ fontFamily:"'Crimson Text',serif", fontSize:13, color:"#a0b4c8", fontStyle:"italic" }}>
+            <div style={{ flex:1 }} />
+
+            {/* Result count */}
+            <span style={{ fontFamily:"'Crimson Text',serif", fontSize:13, color:"#a0b4c8", fontStyle:"italic", whiteSpace:"nowrap" }}>
               {filtered.length} sauce{filtered.length!==1?"s":""}
               {search && ` matching "${search}"`}
-              {catFilter === "saved" && " · Saved"}
-              {diffFilter !== "all" && ` · ${diffFilter}`}
-              {techFilter !== "all" && ` · ${TECH_LABELS[techFilter] ?? techFilter}`}
-              {flavorFilter !== "all" && ` · ${flavorFilter}`}
-            </p>
-            <div style={{ display:"flex", gap:6, alignItems:"center" }}>
-              <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#c8d4e0" }}>/ search · T techniques · D dark · R random · Esc back</span>
-              <select
-                value={sortBy} onChange={e => setSortBy(e.target.value)}
-                style={{ background:"#fff", border:"1px solid #cdd8ea", color:"#6880a8", cursor:"pointer", padding:"4px 8px", borderRadius:6, fontFamily:"'Crimson Text',serif", fontSize:12, outline:"none" }}
-              >
-                <option value="default">Default order</option>
-                <option value="az">A → Z</option>
-                <option value="za">Z → A</option>
-                <option value="time">Quickest first</option>
-                <option value="difficulty">Easiest first</option>
-              </select>
-              <div style={{ display:"flex", gap:2, background:"#eef2f8", borderRadius:6, padding:2 }}>
-                {[["grid","⊞"],["list","≡"]].map(([mode, icon]) => (
-                  <button key={mode} onClick={() => setViewMode(mode)} style={{ background: viewMode===mode ? "#fff" : "transparent", border: viewMode===mode ? "1px solid #cdd8ea" : "1px solid transparent", color: viewMode===mode ? "#2060b0" : "#a0b4c8", cursor:"pointer", padding:"3px 8px", borderRadius:4, fontSize:14, transition:"all .15s" }}>{icon}</button>
-                ))}
-              </div>
+            </span>
+
+            {/* Sort */}
+            <select
+              value={sortBy} onChange={e => setSortBy(e.target.value)}
+              style={{ background:"#fff", border:"1px solid #cdd8ea", color:"#6880a8", cursor:"pointer", padding:"4px 8px", borderRadius:6, fontFamily:"'Crimson Text',serif", fontSize:12, outline:"none" }}
+            >
+              <option value="default">Default</option>
+              <option value="az">A → Z</option>
+              <option value="za">Z → A</option>
+              <option value="time">Quickest</option>
+              <option value="difficulty">Easiest</option>
+            </select>
+
+            {/* View toggle */}
+            <div style={{ display:"flex", gap:2, background:"#ece8e0", borderRadius:6, padding:2 }}>
+              {[["grid","⊞"],["list","≡"]].map(([mode, icon]) => (
+                <button key={mode} onClick={() => setViewMode(mode)} style={{ background: viewMode===mode ? "#fff" : "transparent", border: viewMode===mode ? "1px solid #cdd8ea" : "1px solid transparent", color: viewMode===mode ? "#2060b0" : "#a0b4c8", cursor:"pointer", padding:"3px 8px", borderRadius:4, fontSize:14, transition:"all .15s" }}>{icon}</button>
+              ))}
             </div>
           </div>
+
+          {/* ── Collapsible filter panel ── */}
+          {showFilters && (
+            <div className="filter-panel" style={{ marginBottom:16 }}>
+              {/* Category */}
+              <div style={{ marginBottom:12 }}>
+                <span style={{ fontFamily:"'Crimson Text',serif", fontSize:10, color:"#b0bcd0", letterSpacing:"1px", textTransform:"uppercase", display:"block", marginBottom:6 }}>Category</span>
+                <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+                  {[["all","All"], ...(favorites.size>0?[["saved","♥ Saved"]]:[]), ["mother","Mother"], ["classic","Classics"], ["daughter","Daughters"], ["cold","Cold"], ["stock","Stocks"], ["fish","Fish"], ["chicken","Poultry"], ["beef","Beef"], ["veal","Veal"], ["pork","Pork"], ["shellfish","Shellfish"], ["soup","Soups"], ["vegetable","Vegetables"], ["potato","Potato"], ["dessert","Desserts"], ["eggs","Eggs"], ["bread","Bread"], ["charcuterie","Charcuterie"], ["game","Game"], ["cheese","Cheese"], ["tart","Tarts"], ["rice","Grains"]].map(([v,l]) => (
+                    <button key={v} className={`cat-chip ${catFilter===v?"on":""}`} onClick={() => setCatFilter(v)}>{l}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Difficulty */}
+              <div style={{ marginBottom:12 }}>
+                <span style={{ fontFamily:"'Crimson Text',serif", fontSize:10, color:"#b0bcd0", letterSpacing:"1px", textTransform:"uppercase", display:"block", marginBottom:6 }}>Difficulty</span>
+                <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+                  {[["all","All levels"],["Easy","Easy"],["Medium","Medium"],["Advanced","Advanced"]].map(([v,l]) => (
+                    <button key={v} className={`fb ${diffFilter===v?"on":""}`} onClick={() => setDiffFilter(v)} style={{ fontSize:12, padding:"4px 11px" }}>{l}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Technique */}
+              <div style={{ marginBottom:12 }}>
+                <span style={{ fontFamily:"'Crimson Text',serif", fontSize:10, color:"#b0bcd0", letterSpacing:"1px", textTransform:"uppercase", display:"block", marginBottom:6 }}>Technique</span>
+                <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+                  {["all", ...Object.keys(TECHNIQUE_KEYWORDS)].map(t => (
+                    <button
+                      key={t}
+                      onClick={() => setTechFilter(t)}
+                      style={{ background: techFilter===t ? "#f0ecff" : "#fff", border:"1px solid", borderColor: techFilter===t ? "#9070d0" : "#cdd8ea", color: techFilter===t ? "#7050a8" : "#8898b0", cursor:"pointer", padding:"3px 10px", borderRadius:20, fontFamily:"'Crimson Text',serif", fontSize:12, transition:"all .15s", whiteSpace:"nowrap" }}
+                    >
+                      {t === "all" ? "All" : (TECH_LABELS[t] ?? t.replace("_tech","").replace(/_/g," "))}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Flavour */}
+              <div>
+                <span style={{ fontFamily:"'Crimson Text',serif", fontSize:10, color:"#b0bcd0", letterSpacing:"1px", textTransform:"uppercase", display:"block", marginBottom:6 }}>Flavour</span>
+                <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+                  {["all","Creamy","Rich","Tangy","Herby","Spicy","Umami","Sweet"].map(f => (
+                    <button
+                      key={f}
+                      onClick={() => setFlavorFilter(f)}
+                      style={{ background: flavorFilter===f ? "#fff8ee" : "#fff", border:"1px solid", borderColor: flavorFilter===f ? "#c89030" : "#cdd8ea", color: flavorFilter===f ? "#8a5810" : "#8898b0", cursor:"pointer", padding:"3px 10px", borderRadius:20, fontFamily:"'Crimson Text',serif", fontSize:12, transition:"all .15s", whiteSpace:"nowrap" }}
+                    >
+                      {f === "all" ? "All" : f}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Recently viewed strip (when not searching) */}
           {!search && catFilter === "all" && diffFilter === "all" && recentlyViewed.length > 0 && (
@@ -17010,11 +17110,12 @@ export default function SaucierApp() {
             Object.entries(CATEGORIES).map(([cat, meta]) => {
               const list = SAUCES.filter(s => s.category === cat);
               return (
-                <div key={cat} style={{ marginBottom:30 }}>
-                  <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
-                    <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:15, color:meta.color, fontStyle:"italic" }}>{meta.label}</h2>
-                    <div style={{ flex:1, height:1, background:"#dde8f0" }} />
-                    <span style={{ fontFamily:"'Crimson Text',serif", fontSize:12, color:"#b0c0d8" }}>{list.length}</span>
+                <div key={cat} style={{ marginBottom:34 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:13 }}>
+                    <span style={{ fontSize:17, flexShrink:0 }}>{meta.icon}</span>
+                    <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:16, color:meta.color, fontStyle:"italic", fontWeight:600, flexShrink:0 }}>{meta.label}</h2>
+                    <div style={{ flex:1, height:1, background:`linear-gradient(to right, ${meta.color}44, transparent)` }} />
+                    <span style={{ fontFamily:"'Crimson Text',serif", fontSize:12, color:"#b8c8d0", background:"#f0f4f8", border:"1px solid #dde8f0", borderRadius:10, padding:"1px 8px" }}>{list.length}</span>
                   </div>
                   {viewMode === "grid" ? (
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))", gap:10 }}>
@@ -17023,7 +17124,7 @@ export default function SaucierApp() {
                       ))}
                     </div>
                   ) : (
-                    <div style={{ background:"#fff", border:"1px solid #dde8f4", borderRadius:10, overflow:"hidden" }}>
+                    <div style={{ background:"#fdfcf9", border:"1px solid #e4e0d8", borderRadius:12, overflow:"hidden" }}>
                       {list.map((s, i) => <SauceRow key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} flavor={allFlavorProfiles[s.id]} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} isLast={i===list.length-1} />)}
                     </div>
                   )}
@@ -17039,7 +17140,7 @@ export default function SaucierApp() {
                   ))}
                 </div>
               ) : (
-                <div style={{ background:"#fff", border:"1px solid #dde8f4", borderRadius:10, overflow:"hidden" }}>
+                <div style={{ background:"#fdfcf9", border:"1px solid #e4e0d8", borderRadius:12, overflow:"hidden" }}>
                   {sortedFiltered.map((s, i) => <SauceRow key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} flavor={allFlavorProfiles[s.id]} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} isLast={i===sortedFiltered.length-1} />)}
                 </div>
               )}
