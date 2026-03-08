@@ -15547,6 +15547,17 @@ const ACHIEVEMENTS = [
   { id:"half_century",  icon:"🏆", label:"Half Century",         desc:"Cooked 50 sauces",             check:(c)     => c.size >= 50 },
 ];
 
+function highlightMatch(text, query) {
+  if (!query || query.length < 2) return text;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return text;
+  return [
+    text.slice(0, idx),
+    React.createElement("mark", { key:"m", style:{ background:"#fff3a0", borderRadius:2, padding:"0 1px", color:"inherit", fontStyle:"inherit", fontWeight:"inherit" } }, text.slice(idx, idx + query.length)),
+    text.slice(idx + query.length),
+  ];
+}
+
 export default function SaucierApp() {
   const [selected,      setSelected]      = useState(null);
   const [search,        setSearch]        = useState("");
@@ -15584,6 +15595,7 @@ export default function SaucierApp() {
   const [selectedTech,  setSelectedTech]  = useState(null);
   const [techCatFilter, setTechCatFilter] = useState("all");
   const [showFilters,   setShowFilters]   = useState(false);
+  const [showHelp,      setShowHelp]      = useState(false);
   const searchRef = useRef(null);
   const noteRef   = useRef(null);
   const timerRef  = useRef(null);
@@ -15603,6 +15615,7 @@ export default function SaucierApp() {
   useEffect(() => {
     const handler = (e) => {
       if (e.key === "Escape") {
+        if (showHelp)     { setShowHelp(false); return; }
         if (cookingMode)  { setCookingMode(false); return; }
         if (showCompare)  { setShowCompare(false); return; }
         if (ingSearch)    { setIngSearch(null); return; }
@@ -15629,6 +15642,10 @@ export default function SaucierApp() {
       if (!inInput && !e.ctrlKey && !e.metaKey && e.key === "f") {
         e.preventDefault();
         setShowFilters(f => !f);
+      }
+      if (!inInput && !e.ctrlKey && !e.metaKey && e.key === "?") {
+        e.preventDefault();
+        setShowHelp(h => !h);
       }
       if (cookingMode && sauce) {
         if (e.key === "ArrowRight" || e.key === "ArrowDown") setCookStep(s => Math.min(s + 1, sauce.steps.length - 1));
@@ -15935,6 +15952,7 @@ export default function SaucierApp() {
 
           {/* Right actions */}
           <div style={{ display:"flex", gap:8, alignItems:"center", flexShrink:0, flexWrap:"wrap" }}>
+            <button className="bk" onClick={() => setShowHelp(h => !h)} title="Keyboard shortcuts (?)" style={{ fontSize:13, padding:"4px 9px", fontFamily:"monospace", fontWeight:700, letterSpacing:"-0.5px" }}>?</button>
             <button className="bk" onClick={() => setDarkMode(d => !d)} title="Toggle dark mode" style={{ fontSize:15, padding:"5px 10px" }}>
               {darkMode ? "☀️" : "🌙"}
             </button>
@@ -16055,7 +16073,7 @@ export default function SaucierApp() {
       {ingSearch && (
         <div className="overlay" onClick={() => setIngSearch(null)}>
           <div className="panel" onClick={e => e.stopPropagation()}>
-            <div style={{ padding:"20px 22px", borderBottom:"1px solid #e0e8f4", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <div style={{ padding:"20px 22px", borderBottom:"1px solid #e4dfd4", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div>
                 <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:17, color:"#1a3060" }}>Sauces using</h2>
                 <p style={{ fontFamily:"'Crimson Text',serif", fontStyle:"italic", color:"#4878c0", fontSize:15, marginTop:2 }}>{ingSearch}</p>
@@ -16073,8 +16091,8 @@ export default function SaucierApp() {
                   <div
                     key={s.id}
                     onClick={() => { setIngSearch(null); navigateTo(s.id); }}
-                    style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"11px 22px", borderBottom:"1px solid #f0f5fb", cursor:"pointer", transition:"background .12s" }}
-                    onMouseEnter={e => e.currentTarget.style.background = "#f5f8fd"}
+                    style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"11px 22px", borderBottom:"1px solid #ede8e2", cursor:"pointer", transition:"background .12s" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "#f7f2ea"}
                     onMouseLeave={e => e.currentTarget.style.background = ""}
                   >
                     <div>
@@ -16095,18 +16113,57 @@ export default function SaucierApp() {
         </div>
       )}
 
+      {/* ─── Keyboard Help Modal ─── */}
+      {showHelp && (
+        <div className="overlay" onClick={() => setShowHelp(false)}>
+          <div className="panel" onClick={e => e.stopPropagation()} style={{ maxWidth:420, borderRadius:16 }}>
+            <div style={{ padding:"18px 24px", borderBottom:"1px solid #e4dfd4", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <div>
+                <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:18, color:"#1a3060" }}>Keyboard Shortcuts</h2>
+                <p style={{ fontFamily:"'Crimson Text',serif", fontSize:12, color:"#b0bcd0", marginTop:2 }}>Press <kbd style={{ fontFamily:"monospace", background:"#f0f4f8", border:"1px solid #c8d4e4", borderBottom:"2px solid #a8b8cc", borderRadius:4, padding:"1px 6px", fontSize:11 }}>?</kbd> to close</p>
+              </div>
+              <button className="bk" onClick={() => setShowHelp(false)}>✕</button>
+            </div>
+            <div style={{ padding:"8px 24px 20px" }}>
+              {[
+                { section:"Navigation" },
+                { key:"/",      desc:"Focus search bar" },
+                { key:"Esc",    desc:"Go back / close panel" },
+                { key:"R",      desc:"Open a random sauce" },
+                { section:"Views" },
+                { key:"F",      desc:"Toggle filter panel" },
+                { key:"T",      desc:"Techniques guide" },
+                { key:"D",      desc:"Toggle dark mode" },
+                { key:"?",      desc:"This shortcuts reference" },
+                { section:"Cooking mode" },
+                { key:"↑ / ↓",  desc:"Previous / next step" },
+                { key:"Space",  desc:"Mark current step done" },
+                { key:"Esc",    desc:"Exit cooking mode" },
+              ].map((item, i) => item.section ? (
+                <p key={i} style={{ fontFamily:"'Crimson Text',serif", fontSize:10, color:"#b0bcd0", letterSpacing:"1px", textTransform:"uppercase", marginTop:16, marginBottom:6 }}>{item.section}</p>
+              ) : (
+                <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"7px 0", borderBottom:"1px solid #f0ede8" }}>
+                  <span style={{ fontFamily:"'Crimson Text',serif", fontSize:14, color:"#5a6880" }}>{item.desc}</span>
+                  <kbd style={{ fontFamily:"'SF Mono','Fira Code',monospace", fontSize:12, background:"#f5f3ee", border:"1px solid #ddd8d0", borderBottom:"2px solid #b8b0a8", borderRadius:5, padding:"2px 8px", color:"#1a3060", flexShrink:0 }}>{item.key}</kbd>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ─── Comparison Panel ─── */}
       {showCompare && (
         <div className="overlay" onClick={() => setShowCompare(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ background:"#fff", width:"min(820px,100vw)", height:"100vh", overflow:"auto", boxShadow:"-8px 0 32px rgba(0,0,0,.15)", animation:"slideIn .25s", display:"flex", flexDirection:"column" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background:"#fdfcf9", width:"min(820px,100vw)", height:"100vh", overflow:"auto", boxShadow:"-8px 0 40px rgba(0,0,0,.18)", animation:"slideIn .25s", display:"flex", flexDirection:"column" }}>
             {/* Header */}
-            <div style={{ padding:"18px 24px", borderBottom:"1px solid #e0e8f4", display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0 }}>
-              <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:18, color:"#1a3060" }}>Compare Sauces</h2>
+            <div style={{ padding:"18px 24px", borderBottom:"1px solid #e4dfd4", background:"linear-gradient(to bottom,#fffef9,#faf8f2)", display:"flex", justifyContent:"space-between", alignItems:"center", flexShrink:0 }}>
+              <h2 style={{ fontFamily:"'Playfair Display',serif", fontSize:18, color:"#1a3060" }}>⇌ Compare Sauces</h2>
               <button className="bk" onClick={() => setShowCompare(false)}>✕</button>
             </div>
 
             {/* Sauce pickers */}
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", borderBottom:"1px solid #e0e8f4", flexShrink:0 }}>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", borderBottom:"1px solid #e4dfd4", flexShrink:0 }}>
               {[compareId, compareSauce && selected !== compareId ? selected : null].map((id, col) => {
                 const s = id ? SAUCES.find(x => x.id === id) : null;
                 return (
@@ -16784,7 +16841,7 @@ export default function SaucierApp() {
                   <div
                     key={i}
                     onClick={() => toggleStep(sauce.id, i)}
-                    style={{ display:"flex", gap:14, marginBottom:14, cursor:"pointer", background: done ? "#f2fbf4" : "#fff", border:"1px solid", borderColor: done ? "#a8deb8" : "#e0e8f4", borderRadius:10, padding:"14px 16px", transition:"all .2s", alignItems:"flex-start" }}
+                    style={{ display:"flex", gap:14, marginBottom:14, cursor:"pointer", background: done ? "#f0faf3" : "#fdfcf9", border:"1px solid", borderColor: done ? "#90d8a8" : "#e4dfd4", borderRadius:12, padding:"14px 16px", transition:"all .2s", alignItems:"flex-start", boxShadow: done ? "0 2px 8px rgba(40,160,80,.08)" : "none" }}
                   >
                     <div style={{ width:28, height:28, borderRadius:"50%", background: done ? "linear-gradient(135deg,#5ab870,#3a9858)" : "linear-gradient(135deg,#e4edf9,#c8dcf4)", border:"1px solid", borderColor: done ? "#3a9858" : "#9ab8e0", display:"flex", alignItems:"center", justifyContent:"center", fontSize: done ? 15 : 12, color: done ? "#fff" : "#2060b0", flexShrink:0, fontFamily:"'Crimson Text',serif", fontWeight:600, transition:"all .25s" }}>
                       {done ? "✓" : i+1}
@@ -16797,8 +16854,10 @@ export default function SaucierApp() {
                 );
               })}
               {sauce.steps.every((_, i) => completedSteps[`${sauce.id}_${i}`]) && (
-                <div style={{ textAlign:"center", padding:"18px", background:"#f0fbf4", border:"1px solid #a8deb8", borderRadius:10, fontFamily:"'Playfair Display',serif", fontSize:15, color:"#2a7040", fontStyle:"italic" }}>
-                  ✓ All steps complete · Bon appétit!
+                <div style={{ textAlign:"center", padding:"22px", background:"linear-gradient(135deg,#e8f8ee,#f4fbf6)", border:"1px solid #80cfa0", borderRadius:14, boxShadow:"0 4px 16px rgba(40,160,80,.12)", animation:"popIn .3s" }}>
+                  <div style={{ fontSize:32, marginBottom:8 }}>🎉</div>
+                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize:17, color:"#1a6030", fontStyle:"italic", fontWeight:700 }}>Bon appétit!</div>
+                  <div style={{ fontFamily:"'Crimson Text',serif", fontSize:14, color:"#4a9060", marginTop:4 }}>All {sauce.steps.length} steps complete</div>
                 </div>
               )}
               <p style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#c0d0e0", marginTop:10, fontStyle:"italic" }}>Click a step to mark it complete</p>
@@ -17008,21 +17067,24 @@ export default function SaucierApp() {
             {/* Sauce of the Day */}
             <div
               onClick={() => navigateTo(sauceOfDay.id)}
-              style={{ background:`linear-gradient(135deg,${sauceOfDay.accent}22 0%,#fdfcf9 55%)`, border:`1px solid ${sauceOfDay.accent}55`, borderRadius:14, padding:"16px 20px", marginBottom:24, cursor:"pointer", display:"flex", alignItems:"center", gap:16, position:"relative", overflow:"hidden", transition:"all .2s" }}
-              onMouseEnter={e => e.currentTarget.style.boxShadow = `0 4px 20px ${sauceOfDay.accent}30`}
-              onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
+              style={{ background:`linear-gradient(135deg,${sauceOfDay.accent}28 0%,${sauceOfDay.accent}10 40%,#fdfcf9 70%)`, border:`1px solid ${sauceOfDay.accent}60`, borderRadius:16, padding:"22px 24px 22px 28px", marginBottom:24, cursor:"pointer", position:"relative", overflow:"hidden", transition:"all .25s" }}
+              onMouseEnter={e => { e.currentTarget.style.boxShadow = `0 8px 32px ${sauceOfDay.accent}30`; e.currentTarget.style.transform = "translateY(-1px)"; }}
+              onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}
             >
-              <div style={{ position:"absolute", top:0, left:0, bottom:0, width:4, background:sauceOfDay.accent, borderRadius:"12px 0 0 12px" }} />
-              <div style={{ paddingLeft:8, flex:1, minWidth:0 }}>
-                <div style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:sauceOfDay.accent, textTransform:"uppercase", letterSpacing:"1.5px", marginBottom:4 }}>Sauce of the Day</div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontSize:18, fontWeight:700, color:"#1a2540" }}>{sauceOfDay.name}</div>
-                <div style={{ fontFamily:"'Playfair Display',serif", fontStyle:"italic", fontSize:13, color:sauceOfDay.accent, marginTop:2 }}>{sauceOfDay.tagline}</div>
-                <div style={{ fontFamily:"'Crimson Text',serif", fontSize:13, color:"#7888a8", marginTop:6, lineHeight:1.5 }}>{sauceOfDay.description.slice(0,120)}…</div>
-              </div>
-              <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:6, flexShrink:0 }}>
-                <span style={{ fontFamily:"'Crimson Text',serif", fontSize:12, color:getDifficultyColor(sauceOfDay.difficulty), background:getDifficultyColor(sauceOfDay.difficulty)+"15", border:`1px solid ${getDifficultyColor(sauceOfDay.difficulty)}40`, borderRadius:10, padding:"2px 8px" }}>{sauceOfDay.difficulty}</span>
-                <span style={{ fontFamily:"'Crimson Text',serif", fontSize:12, color:"#a0b4c8" }}>⏱ {sauceOfDay.time}</span>
-                <span style={{ fontFamily:"'Crimson Text',serif", fontSize:13, color:sauceOfDay.accent }}>Open →</span>
+              <div style={{ position:"absolute", top:0, left:0, bottom:0, width:5, background:`linear-gradient(to bottom,${sauceOfDay.accent},${sauceOfDay.accent}88)`, borderRadius:"16px 0 0 16px" }} />
+              <div style={{ position:"absolute", top:12, right:20, fontFamily:"'Crimson Text',serif", fontSize:10, color:sauceOfDay.accent, textTransform:"uppercase", letterSpacing:"2px", opacity:.7 }}>Featured today</div>
+              <div style={{ display:"flex", alignItems:"flex-start", gap:16, marginTop:4 }}>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:700, color:"#1a2540", lineHeight:1.15, marginBottom:4 }}>{sauceOfDay.name}</div>
+                  <div style={{ fontFamily:"'Playfair Display',serif", fontStyle:"italic", fontSize:14, color:sauceOfDay.accent, marginBottom:10 }}>{sauceOfDay.tagline}</div>
+                  <div style={{ fontFamily:"'Crimson Text',serif", fontSize:14, color:"#6878a0", lineHeight:1.65, maxWidth:520 }}>{sauceOfDay.description.slice(0,160)}…</div>
+                  <div style={{ display:"flex", gap:10, alignItems:"center", marginTop:14 }}>
+                    <span style={{ fontFamily:"'Crimson Text',serif", fontSize:13, color:getDifficultyColor(sauceOfDay.difficulty), background:getDifficultyColor(sauceOfDay.difficulty)+"15", border:`1px solid ${getDifficultyColor(sauceOfDay.difficulty)}44`, borderRadius:10, padding:"2px 10px" }}>{sauceOfDay.difficulty}</span>
+                    <span style={{ fontFamily:"'Crimson Text',serif", fontSize:13, color:"#a0b4c8" }}>⏱ {sauceOfDay.time}</span>
+                    {sauceOfDay.children.length > 0 && <span style={{ fontFamily:"'Crimson Text',serif", fontSize:13, color:"#4888c0" }}>{sauceOfDay.children.length} daughters</span>}
+                    <span style={{ fontFamily:"'Crimson Text',serif", fontSize:14, color:sauceOfDay.accent, marginLeft:"auto" }}>Open recipe →</span>
+                  </div>
+                </div>
               </div>
             </div>
             </>
@@ -17183,12 +17245,12 @@ export default function SaucierApp() {
                   {viewMode === "grid" ? (
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))", gap:10 }}>
                       {list.map(s => (
-                        <SauceCard key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} flavor={allFlavorProfiles[s.id]} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} />
+                        <SauceCard key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} flavor={allFlavorProfiles[s.id]} query={search} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} />
                       ))}
                     </div>
                   ) : (
                     <div style={{ background:"#fdfcf9", border:"1px solid #e4e0d8", borderRadius:12, overflow:"hidden" }}>
-                      {list.map((s, i) => <SauceRow key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} flavor={allFlavorProfiles[s.id]} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} isLast={i===list.length-1} />)}
+                      {list.map((s, i) => <SauceRow key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} flavor={allFlavorProfiles[s.id]} query={search} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} isLast={i===list.length-1} />)}
                     </div>
                   )}
                 </div>
@@ -17199,17 +17261,31 @@ export default function SaucierApp() {
               {viewMode === "grid" ? (
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))", gap:10 }}>
                   {sortedFiltered.map(s => (
-                    <SauceCard key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} flavor={allFlavorProfiles[s.id]} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} />
+                    <SauceCard key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} flavor={allFlavorProfiles[s.id]} query={search} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} />
                   ))}
                 </div>
               ) : (
                 <div style={{ background:"#fdfcf9", border:"1px solid #e4e0d8", borderRadius:12, overflow:"hidden" }}>
-                  {sortedFiltered.map((s, i) => <SauceRow key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} flavor={allFlavorProfiles[s.id]} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} isLast={i===sortedFiltered.length-1} />)}
+                  {sortedFiltered.map((s, i) => <SauceRow key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} flavor={allFlavorProfiles[s.id]} query={search} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} isLast={i===sortedFiltered.length-1} />)}
                 </div>
               )}
               {sortedFiltered.length === 0 && (
-                <div style={{ textAlign:"center", padding:"40px 20px", color:"#a0b4c8", fontFamily:"'Crimson Text',serif", fontStyle:"italic" }}>
-                  No sauces found. <button style={{ background:"none", border:"none", color:"#4878c0", cursor:"pointer", fontFamily:"'Crimson Text',serif", fontStyle:"italic" }} onClick={() => { setSearch(""); setCatFilter("all"); setDiffFilter("all"); setTechFilter("all"); setFlavorFilter("all"); setSortBy("default"); }}>Clear filters</button>
+                <div style={{ textAlign:"center", padding:"52px 24px", background:"#fdfcf9", border:"1px solid #e4dfd4", borderRadius:14 }}>
+                  <div style={{ fontSize:44, marginBottom:12 }}>🍶</div>
+                  <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:18, color:"#1a3060", fontStyle:"italic", marginBottom:8 }}>
+                    {search ? `Nothing matches "${search}"` : "No sauces match these filters"}
+                  </h3>
+                  <p style={{ fontFamily:"'Crimson Text',serif", fontSize:14, color:"#a0b4c8", marginBottom:20 }}>
+                    Try removing a filter or broadening your search
+                  </p>
+                  <div style={{ display:"flex", gap:7, justifyContent:"center", flexWrap:"wrap", marginBottom:12 }}>
+                    {search && <button onClick={() => setSearch("")} style={{ background:"#e8f0fe", border:"1px solid #b0c8f0", color:"#1a3060", cursor:"pointer", padding:"4px 12px", borderRadius:20, fontFamily:"'Crimson Text',serif", fontSize:13, display:"flex", alignItems:"center", gap:4 }}>✕ "{search}"</button>}
+                    {catFilter !== "all" && <button onClick={() => setCatFilter("all")} style={{ background:"#e8f0fe", border:"1px solid #b0c8f0", color:"#1a3060", cursor:"pointer", padding:"4px 12px", borderRadius:20, fontFamily:"'Crimson Text',serif", fontSize:13, display:"flex", alignItems:"center", gap:4 }}>✕ {catFilter}</button>}
+                    {diffFilter !== "all" && <button onClick={() => setDiffFilter("all")} style={{ background:"#e8f0fe", border:"1px solid #b0c8f0", color:"#1a3060", cursor:"pointer", padding:"4px 12px", borderRadius:20, fontFamily:"'Crimson Text',serif", fontSize:13, display:"flex", alignItems:"center", gap:4 }}>✕ {diffFilter}</button>}
+                    {techFilter !== "all" && <button onClick={() => setTechFilter("all")} style={{ background:"#f0ecff", border:"1px solid #c0a8e8", color:"#5030a0", cursor:"pointer", padding:"4px 12px", borderRadius:20, fontFamily:"'Crimson Text',serif", fontSize:13, display:"flex", alignItems:"center", gap:4 }}>✕ {TECH_LABELS[techFilter] ?? techFilter}</button>}
+                    {flavorFilter !== "all" && <button onClick={() => setFlavorFilter("all")} style={{ background:"#fff8ee", border:"1px solid #e8c870", color:"#8a5010", cursor:"pointer", padding:"4px 12px", borderRadius:20, fontFamily:"'Crimson Text',serif", fontSize:13, display:"flex", alignItems:"center", gap:4 }}>✕ {flavorFilter}</button>}
+                  </div>
+                  {(search || activeFilterCount > 0) && <button onClick={() => { setSearch(""); setCatFilter("all"); setDiffFilter("all"); setTechFilter("all"); setFlavorFilter("all"); setSortBy("default"); }} style={{ background:"none", border:"1px solid #e4dfd4", color:"#8898b0", cursor:"pointer", padding:"5px 16px", borderRadius:8, fontFamily:"'Crimson Text',serif", fontSize:13 }}>Clear everything</button>}
                 </div>
               )}
             </>
@@ -17232,7 +17308,7 @@ export default function SaucierApp() {
   );
 }
 
-function SauceCard({ sauce, isFav, inShop, isCooked, hasNote, rating, flavor, onFav, onShop, onClick }) {
+function SauceCard({ sauce, isFav, inShop, isCooked, hasNote, rating, flavor, onFav, onShop, onClick, query }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
@@ -17264,9 +17340,9 @@ function SauceCard({ sauce, isFav, inShop, isCooked, hasNote, rating, flavor, on
         >{inShop ? "✓" : "+"}</button>
       </div>
 
-      <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:15, color:"#1a2540", paddingRight: hovered||isFav||inShop ? 70 : 0, transition:"padding .15s", marginTop: isCooked||hasNote ? 16 : 0 }}>{sauce.name}</h3>
+      <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:15, color:"#1a2540", paddingRight: hovered||isFav||inShop ? 70 : 0, transition:"padding .15s", marginTop: isCooked||hasNote ? 16 : 0 }}>{highlightMatch(sauce.name, query)}</h3>
       <p style={{ fontFamily:"'Playfair Display',serif", fontStyle:"italic", color:sauce.accent, fontSize:12, marginTop:3, marginBottom:7 }}>{sauce.tagline}</p>
-      <p style={{ fontFamily:"'Crimson Text',serif", fontSize:13, color:"#7888a8", lineHeight:1.5 }}>{sauce.description.slice(0,90)}…</p>
+      <p style={{ fontFamily:"'Crimson Text',serif", fontSize:13, color:"#7888a8", lineHeight:1.5 }}>{highlightMatch(sauce.description.slice(0,90), query)}…</p>
       <div style={{ marginTop:10, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
         <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
           <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#a8b8cc" }}>⏱ {sauce.time}</span>
@@ -17284,7 +17360,7 @@ function SauceCard({ sauce, isFav, inShop, isCooked, hasNote, rating, flavor, on
   );
 }
 
-function SauceRow({ sauce, isFav, inShop, isCooked, hasNote, rating, flavor, onFav, onShop, onClick, isLast }) {
+function SauceRow({ sauce, isFav, inShop, isCooked, hasNote, rating, flavor, onFav, onShop, onClick, isLast, query }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
@@ -17296,7 +17372,7 @@ function SauceRow({ sauce, isFav, inShop, isCooked, hasNote, rating, flavor, onF
       <div style={{ width:4, height:36, borderRadius:2, background:sauce.accent, flexShrink:0 }} />
       <div style={{ flex:1, minWidth:0 }}>
         <div style={{ display:"flex", alignItems:"baseline", gap:8 }}>
-          <span style={{ fontFamily:"'Playfair Display',serif", fontSize:14, color:"#1a2540", fontWeight:600 }}>{sauce.name}</span>
+          <span style={{ fontFamily:"'Playfair Display',serif", fontSize:14, color:"#1a2540", fontWeight:600 }}>{highlightMatch(sauce.name, query)}</span>
           <span style={{ fontFamily:"'Playfair Display',serif", fontStyle:"italic", fontSize:12, color:sauce.accent }}>{sauce.tagline}</span>
           {isCooked && <span style={{ fontSize:10, color:"#5ab870" }}>✓</span>}
           {hasNote  && <span style={{ fontSize:10, color:"#d4b84a" }}>✏</span>}
