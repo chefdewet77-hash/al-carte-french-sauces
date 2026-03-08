@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>French Sauces App Preview</title>
+  <title>Saucier — French Sauce Encyclopedia</title>
   <style>
     body { margin: 0; font-family: system-ui, sans-serif; background: #eef2f8; }
     #root { min-height: 100vh; padding-top: 52px; }
@@ -60,10 +60,10 @@
     hintBtn.addEventListener('click', showHint);
 
     function renderApp() {
-      if (window.FrenchSaucesApp) {
+      if (window.SaucierApp) {
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(React.createElement(window.FrenchSaucesApp));
-        setNotice('Loaded successfully! Use search to browse sauces.', { error: false, showSpinner: false });
+        root.render(React.createElement(window.SaucierApp));
+        setNotice('Saucier ready — 546 French sauces at your fingertips.', { error: false, showSpinner: false });
         return true;
       }
       return false;
@@ -94,14 +94,14 @@
         return `function ${name}(`;
       });
       if (exportedName) {
-        source += `\nwindow.FrenchSaucesApp = ${exportedName};`;
+        source += `\nwindow.SaucierApp = ${exportedName};`;
       }
 
       // Handle `export default Identifier;`
-      source = source.replace(/export\s+default\s+([A-Za-z0-9_]+);/g, (m, id) => `window.FrenchSaucesApp = ${id};`);
+      source = source.replace(/export\s+default\s+([A-Za-z0-9_]+);/g, (m, id) => `window.SaucierApp = ${id};`);
 
-      // Handle `export default (...) => {}` (assign to window.FrenchSaucesApp)
-      source = source.replace(/export\s+default\s*\(/g, 'window.FrenchSaucesApp = (');
+      // Handle `export default (...) => {}` (assign to window.SaucierApp)
+      source = source.replace(/export\s+default\s*\(/g, 'window.SaucierApp = (');
 
       // Remove any remaining exports that would break the browser environment
       source = source.replace(/export\s+\{[^}]*\};?/g, '');
@@ -136,7 +136,7 @@
 
     // Auto-load the JSX file from the server if available
     async function autoLoad() {
-      const jsxFile = 'french-sauces-app (9).jsx';
+      const jsxFile = 'saucier.jsx';
       try {
         setNotice('Auto-loading app from server…', { showSpinner: true });
         const res = await fetch(jsxFile + '?v=' + Date.now());

@@ -15282,7 +15282,7 @@ const ACHIEVEMENTS = [
   { id:"half_century",  icon:"🏆", label:"Half Century",         desc:"Cooked 50 sauces",             check:(c)     => c.size >= 50 },
 ];
 
-export default function FrenchSaucesApp() {
+export default function SaucierApp() {
   const [selected,      setSelected]      = useState(null);
   const [search,        setSearch]        = useState("");
   const [catFilter,     setCatFilter]     = useState("all");
@@ -15564,9 +15564,9 @@ export default function FrenchSaucesApp() {
           {/* Title */}
           <div style={{ display:"flex", alignItems:"baseline", gap:8, flexShrink:0 }}>
             <h1 style={{ fontFamily:"'Playfair Display',serif", fontSize:19, fontWeight:700, color:"#1a3060", letterSpacing:"-.3px" }}>
-              Les Sauces Françaises
+              Saucier
             </h1>
-            <span style={{ color:"#b0c0d8", fontSize:11, fontFamily:"'Crimson Text',serif", fontStyle:"italic" }}>{SAUCES.length}</span>
+            <span style={{ color:"#b0c0d8", fontSize:11, fontFamily:"'Crimson Text',serif", fontStyle:"italic" }}>Les Sauces Françaises · {SAUCES.length}</span>
           </div>
 
           {/* Search */}
