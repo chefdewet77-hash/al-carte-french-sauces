@@ -133,7 +133,7 @@
       const jsxFile = 'french-sauces-app (9).jsx';
       try {
         setNotice('Auto-loading app from server…', { showSpinner: true });
-        const res = await fetch(jsxFile);
+        const res = await fetch(jsxFile + '?v=' + Date.now());
         if (!res.ok) throw new Error('Not found');
         const source = await res.text();
         injectAndRun(source);
