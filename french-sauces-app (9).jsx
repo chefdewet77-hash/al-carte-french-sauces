@@ -15281,16 +15281,16 @@ export default function FrenchSaucesApp() {
   const [showTree,      setShowTree]      = useState(false);
   const [servings,      setServings]      = useState(null);
   const [isImperial,    setIsImperial]    = useState(false);
-  const [favorites,     setFavorites]     = useState(() => new Set());
-  const [shopList,      setShopList]      = useState(() => new Set());
+  const [favorites,     setFavorites]     = useState(() => { try { const s = localStorage.getItem("lsc_fav");   return s ? new Set(JSON.parse(s)) : new Set(); } catch { return new Set(); } });
+  const [shopList,      setShopList]      = useState(() => { try { const s = localStorage.getItem("lsc_shop");  return s ? new Set(JSON.parse(s)) : new Set(); } catch { return new Set(); } });
   const [showShop,      setShowShop]      = useState(false);
-  const [recentlyViewed,setRecentlyViewed]= useState([]);
-  const [completedSteps,setCompletedSteps]= useState({});   // { [sauceId_stepIdx]: true }
+  const [recentlyViewed,setRecentlyViewed]= useState(() => { try { return JSON.parse(localStorage.getItem("lsc_recent") || "[]"); } catch { return []; } });
+  const [completedSteps,setCompletedSteps]= useState(() => { try { return JSON.parse(localStorage.getItem("lsc_steps")  || "{}"); } catch { return {}; } });   // { [sauceId_stepIdx]: true }
   const [cookingMode,   setCookingMode]   = useState(false); // fullscreen step-by-step
   const [cookStep,      setCookStep]      = useState(0);
   const [sortBy,        setSortBy]        = useState("default"); // default | az | za | time | difficulty
   const [viewMode,      setViewMode]      = useState("grid"); // grid | list
-  const [userNotes,     setUserNotes]     = useState({});    // { [sauceId]: string }
+  const [userNotes,     setUserNotes]     = useState(() => { try { return JSON.parse(localStorage.getItem("lsc_notes") || "{}"); } catch { return {}; } });    // { [sauceId]: string }
   const [editingNote,   setEditingNote]   = useState(false);
   const [noteText,      setNoteText]      = useState("");
   const [ingSearch,     setIngSearch]     = useState(null);  // ingredient name being cross-referenced
@@ -15375,6 +15375,13 @@ export default function FrenchSaucesApp() {
   useEffect(() => {
     setTimerSecs(null); setTimerRunning(false); setTimerDone(false);
   }, [cookStep, selected]);
+
+  // Persist user data to localStorage
+  useEffect(() => { try { localStorage.setItem("lsc_fav",    JSON.stringify([...favorites]));       } catch {} }, [favorites]);
+  useEffect(() => { try { localStorage.setItem("lsc_shop",   JSON.stringify([...shopList]));        } catch {} }, [shopList]);
+  useEffect(() => { try { localStorage.setItem("lsc_steps",  JSON.stringify(completedSteps));       } catch {} }, [completedSteps]);
+  useEffect(() => { try { localStorage.setItem("lsc_notes",  JSON.stringify(userNotes));            } catch {} }, [userNotes]);
+  useEffect(() => { try { localStorage.setItem("lsc_recent", JSON.stringify(recentlyViewed));       } catch {} }, [recentlyViewed]);
 
   const navigateTo = (id) => {
     setSelected(id);
@@ -15599,6 +15606,14 @@ export default function FrenchSaucesApp() {
                   <button className="fb" onClick={() => setIsImperial(!isImperial)} style={{ flex:1 }}>
                     {isImperial ? "→ Metric" : "→ Imperial"}
                   </button>
+                  <button className="fb" style={{ flex:1 }} onClick={(e) => {
+                    const lines = shopIngredients.map(ing => `${formatAmount(ing.value, ing.unit, isImperial)}  ${ing.name}`);
+                    const header = [...shopList].map(id => SAUCES.find(s=>s.id===id)?.name).filter(Boolean).join(", ");
+                    navigator.clipboard.writeText(`Shopping List\n${header}\n\n${lines.join("\n")}`).then(() => {
+                      const btn = e.currentTarget; btn.textContent = "✓ Copied!";
+                      setTimeout(() => { btn.textContent = "📋 Copy list"; }, 1800);
+                    });
+                  }}>📋 Copy list</button>
                 </div>
               </>
             )}
@@ -16029,6 +16044,13 @@ export default function FrenchSaucesApp() {
                 >
                   ⇌ Compare
                 </button>
+                <button
+                  onClick={() => window.print()}
+                  title="Print this recipe"
+                  style={{ background:"none", border:"1px solid #cdd8ea", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, transition:"all .15s", color:"#a0b0c8", fontFamily:"'Crimson Text',serif" }}
+                >
+                  🖨 Print
+                </button>
               </div>
             </div>
 
@@ -16254,6 +16276,26 @@ export default function FrenchSaucesApp() {
                 </div>
               ))}
             </div>
+
+            {/* Cooking progress bar */}
+            {cookedIds.size > 0 && (
+              <div style={{ marginBottom:16, background:"#fff", border:"1px solid #dde8f4", borderRadius:10, padding:"14px 18px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:8 }}>
+                  <span style={{ fontFamily:"'Crimson Text',serif", fontSize:13, color:"#5a7080" }}>Cooking journey</span>
+                  <span style={{ fontFamily:"'Playfair Display',serif", fontSize:13, color:"#2a9858", fontWeight:600 }}>
+                    {cookedIds.size} / {SAUCES.length} — {Math.round(cookedIds.size / SAUCES.length * 100)}%
+                  </span>
+                </div>
+                <div style={{ height:8, background:"#e8f0f8", borderRadius:4, overflow:"hidden" }}>
+                  <div style={{ height:"100%", width:`${cookedIds.size / SAUCES.length * 100}%`, background:"linear-gradient(90deg,#7dd898,#2a9858)", borderRadius:4, transition:"width .5s ease" }} />
+                </div>
+                {cookedIds.size >= SAUCES.length && (
+                  <div style={{ marginTop:8, fontFamily:"'Playfair Display',serif", fontStyle:"italic", fontSize:13, color:"#2a9858", textAlign:"center" }}>
+                    👑 Maître Saucier — all recipes completed!
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Sauce of the Day */}
             <div
