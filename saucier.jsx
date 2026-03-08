@@ -15200,6 +15200,48 @@ function getSauceTechniques(sauce) {
     .map(([t]) => t);
 }
 
+const FLAVOR_KEYWORDS = {
+  Creamy: ["cream","crème","beurre","butter","milk","lait","liaison","velouté","béchamel","mascarpone","fromage","double cream"],
+  Rich:   ["demi-glace","espagnole","marrow","bone","fond","confit","glace","braised","foie","lard","pork belly","gratin","reduced","fortified"],
+  Tangy:  ["vinegar","vinaigre","lemon","citron","wine","verjuice","verjus","mustard","moutarde","caper","câpre","sorrel","oseille","lime","citrus","acid"],
+  Herby:  ["tarragon","estragon","chervil","cerfeuil","parsley","persil","chives","ciboulette","basil","thyme","thym","bay","herb","fines herbes","persillade"],
+  Spicy:  ["cayenne","pepper","poivre","chilli","piment","horseradish","raifort","harissa","dijon","paprika","moutarde forte","peppercorn"],
+  Umami:  ["anchovy","anchois","mushroom","champignon","truffle","truffe","worcester","morel","morille","fumet","dried","ceps","porcini","miso"],
+  Sweet:  ["sugar","sucre","honey","miel","caramel","orange","raspberry","framboise","cassis","apricot","abricot","port","madeira","sweet","dessert"],
+};
+
+function getSauceFlavorProfile(sauce) {
+  const haystack = (
+    sauce.description + " " + sauce.tips + " " +
+    sauce.ingredients.map(i => i.name).join(" ") + " " +
+    sauce.steps.map(s => s.body).join(" ")
+  ).toLowerCase();
+  return Object.entries(FLAVOR_KEYWORDS)
+    .filter(([, kws]) => kws.some(kw => haystack.includes(kw)))
+    .map(([tag]) => tag);
+}
+
+const TECH_LABELS = {
+  monter_beurre:   "Monter au Beurre",
+  beurre_manie:    "Beurre Manié",
+  beurre_noisette: "Beurre Noisette",
+  mirepoix_cut:    "Mirepoix",
+  velouté_tech:    "Velouté",
+  saute:           "Sauté",
+  flambe:          "Flambé",
+  braising:        "Braising",
+  blanching:       "Blanching",
+  simmering:       "Simmering",
+  glazing:         "Glazing",
+  confit:          "Confit",
+  deglaze:         "Déglacer",
+  infusion:        "Infusion",
+  marinade:        "Marinade",
+  julienne:        "Julienne",
+  chiffonade:      "Chiffonade",
+  fumage:          "Fumage",
+};
+
 function getAncestry(sauce) {
   const chain = [];
   let cur = sauce;
@@ -15511,6 +15553,7 @@ export default function SaucierApp() {
   const [catFilter,     setCatFilter]     = useState("all");
   const [diffFilter,    setDiffFilter]    = useState("all");
   const [techFilter,    setTechFilter]    = useState("all");
+  const [flavorFilter,  setFlavorFilter]  = useState("all");
   const [activeTab,     setActiveTab]     = useState("ingredients");
   const [showTree,      setShowTree]      = useState(false);
   const [servings,      setServings]      = useState(null);
@@ -15563,7 +15606,7 @@ export default function SaucierApp() {
         if (showCompare)  { setShowCompare(false); return; }
         if (ingSearch)    { setIngSearch(null); return; }
         if (showShop)     { setShowShop(false); return; }
-        if (selected)     { setSelected(null); return; }
+        if (selected)     { setSelected(null); try { window.location.hash = ""; } catch {} return; }
         if (showTree)     { setShowTree(false); return; }
         if (selectedTech) { setSelectedTech(null); return; }
         if (showTechGuide){ setShowTechGuide(false); return; }
@@ -15669,7 +15712,17 @@ export default function SaucierApp() {
     setCookingMode(false);
     setCookStep(0);
     setRecentlyViewed(prev => [id, ...prev.filter(x => x !== id)].slice(0, 8));
+    try { window.location.hash = id; } catch {}
   };
+
+  // On mount: restore sauce from URL hash (deep link / bookmark support)
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (hash && SAUCES.find(s => s.id === hash)) {
+      setSelected(hash);
+      setRecentlyViewed(prev => [hash, ...prev.filter(x => x !== hash)].slice(0, 8));
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const getTechSauces = useCallback((tech) => {
     return SAUCES.filter(s => {
@@ -15692,13 +15745,19 @@ export default function SaucierApp() {
   };
   const deleteNote = (id) => { setUserNotes(prev => { const n = {...prev}; delete n[id]; return n; }); setEditingNote(false); };
 
+  const allFlavorProfiles = React.useMemo(
+    () => Object.fromEntries(SAUCES.map(s => [s.id, getSauceFlavorProfile(s)])),
+    [] // SAUCES is a module-level constant
+  );
+
   const filtered = SAUCES.filter(s => {
     const q = search.toLowerCase();
     const matchQ = !search || s.name.toLowerCase().includes(q) || s.tagline.toLowerCase().includes(q) || s.description.toLowerCase().includes(q);
     const matchC = catFilter === "all" || (catFilter === "saved" ? favorites.has(s.id) : s.category === catFilter);
     const matchD = diffFilter === "all" || s.difficulty === diffFilter;
     const matchT = techFilter === "all" || getSauceTechniques(s).includes(techFilter);
-    return matchQ && matchC && matchD && matchT;
+    const matchF = flavorFilter === "all" || (allFlavorProfiles[s.id] || []).includes(flavorFilter);
+    return matchQ && matchC && matchD && matchT && matchF;
   });
 
   const DIFF_ORDER = { "Easy": 0, "Medium": 1, "Advanced": 2 };
@@ -15786,6 +15845,14 @@ export default function SaucierApp() {
         .toast-exit{animation:toastOut .35s ease forwards}
         @keyframes toastIn{from{opacity:0;transform:translateX(80px) scale(.9)}to{opacity:1;transform:translateX(0) scale(1)}}
         @keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(80px)}}
+        @media print{
+          .no-print{display:none!important}
+          body{background:#fff!important;color:#000!important;font-size:12pt}
+          .panel,.overlay{display:none!important}
+          h2,h3{font-family:'Playfair Display',Georgia,serif!important;page-break-after:avoid}
+          li,p{font-family:Georgia,serif!important;line-height:1.6}
+          .sc{box-shadow:none!important;border:1px solid #ccc!important;page-break-inside:avoid}
+        }
         ${darkMode ? `
           .sc{background:#1e2a3e!important;border-color:#2d3f5a!important;color:#e2e8f0!important}
           .sc:hover{border-color:#4878c0!important;box-shadow:0 10px 32px rgba(0,0,0,.4)!important}
@@ -15800,7 +15867,7 @@ export default function SaucierApp() {
       `}</style>
 
       {/* ─── Header ─── */}
-      <div style={{ background:"#fff", borderBottom:"1px solid #cdd8ea", padding:"12px 20px", position:"sticky", top:0, zIndex:100 }}>
+      <div className="no-print" style={{ background:"#fff", borderBottom:"1px solid #cdd8ea", padding:"12px 20px", position:"sticky", top:0, zIndex:100 }}>
         <div style={{ maxWidth:980, margin:"0 auto", display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
           {/* Title */}
           <div style={{ display:"flex", alignItems:"baseline", gap:8, flexShrink:0 }}>
@@ -15920,13 +15987,17 @@ export default function SaucierApp() {
                   <button className="fb" onClick={() => setIsImperial(!isImperial)} style={{ flex:1 }}>
                     {isImperial ? "→ Metric" : "→ Imperial"}
                   </button>
-                  <button className="fb" style={{ flex:1 }} onClick={(e) => {
-                    const lines = shopIngredients.map(ing => `${formatAmount(ing.value, ing.unit, isImperial)}  ${ing.name}`);
-                    const header = [...shopList].map(id => SAUCES.find(s=>s.id===id)?.name).filter(Boolean).join(", ");
-                    navigator.clipboard.writeText(`Shopping List\n${header}\n\n${lines.join("\n")}`).then(() => {
-                      const btn = e.currentTarget; btn.textContent = "✓ Copied!";
-                      setTimeout(() => { btn.textContent = "📋 Copy list"; }, 1800);
-                    });
+                  <button className="fb" style={{ flex:1 }} onClick={() => {
+                    const sections = [...shopList].map(id => {
+                      const s = SAUCES.find(x => x.id === id);
+                      if (!s) return null;
+                      const ings = s.ingredients.map(ing => `  · ${formatAmount(ing.value, ing.unit, isImperial)}  ${ing.name}`).join("\n");
+                      return `${s.name}\n${ings}`;
+                    }).filter(Boolean);
+                    const text = `Saucier — Shopping List\n${"─".repeat(30)}\n\n${sections.join("\n\n")}`;
+                    navigator.clipboard.writeText(text)
+                      .then(() => addToast("List copied to clipboard!", "📋"))
+                      .catch(() => addToast("Copy failed — try again", "✕"));
                   }}>📋 Copy list</button>
                 </div>
               </>
@@ -16766,7 +16837,7 @@ export default function SaucierApp() {
         <div style={{ maxWidth:980, margin:"0 auto", padding:"20px 16px" }}>
 
           {/* Stats dashboard — only show on home (all, no search, no filter) */}
-          {catFilter === "all" && !search && diffFilter === "all" && techFilter === "all" && (
+          {catFilter === "all" && !search && diffFilter === "all" && techFilter === "all" && flavorFilter === "all" && (
             <>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))", gap:10, marginBottom:16 }}>
               {[
@@ -16863,16 +16934,30 @@ export default function SaucierApp() {
             </div>
           </div>
 
-          {/* Technique filter */}
-          <div style={{ display:"flex", gap:5, marginBottom:14, flexWrap:"wrap", alignItems:"center" }}>
-            <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#b0bcd0", letterSpacing:".8px", textTransform:"uppercase", flexShrink:0 }}>By technique:</span>
-            {["all","roux","emulsification","reduction","liaison","clarification","poaching"].map(t => (
+          {/* Technique filter — all techniques */}
+          <div style={{ display:"flex", gap:5, marginBottom:8, flexWrap:"wrap", alignItems:"center" }}>
+            <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#b0bcd0", letterSpacing:".8px", textTransform:"uppercase", flexShrink:0 }}>Technique:</span>
+            {["all", ...Object.keys(TECHNIQUE_KEYWORDS)].map(t => (
               <button
                 key={t}
                 onClick={() => setTechFilter(t)}
                 style={{ background: techFilter===t ? "#f0ecff" : "#fff", border:"1px solid", borderColor: techFilter===t ? "#9070d0" : "#cdd8ea", color: techFilter===t ? "#7050a8" : "#8898b0", cursor:"pointer", padding:"3px 10px", borderRadius:20, fontFamily:"'Crimson Text',serif", fontSize:12, transition:"all .15s", whiteSpace:"nowrap" }}
               >
-                {t === "all" ? "All techniques" : t.replace("_tech","").replace(/_/g," ")}
+                {t === "all" ? "All" : (TECH_LABELS[t] ?? t.replace("_tech","").replace(/_/g," "))}
+              </button>
+            ))}
+          </div>
+
+          {/* Flavour filter */}
+          <div style={{ display:"flex", gap:5, marginBottom:14, flexWrap:"wrap", alignItems:"center" }}>
+            <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#b0bcd0", letterSpacing:".8px", textTransform:"uppercase", flexShrink:0 }}>Flavour:</span>
+            {["all","Creamy","Rich","Tangy","Herby","Spicy","Umami","Sweet"].map(f => (
+              <button
+                key={f}
+                onClick={() => setFlavorFilter(f)}
+                style={{ background: flavorFilter===f ? "#fff8ee" : "#fff", border:"1px solid", borderColor: flavorFilter===f ? "#c89030" : "#cdd8ea", color: flavorFilter===f ? "#8a5810" : "#8898b0", cursor:"pointer", padding:"3px 10px", borderRadius:20, fontFamily:"'Crimson Text',serif", fontSize:12, transition:"all .15s", whiteSpace:"nowrap" }}
+              >
+                {f === "all" ? "All" : f}
               </button>
             ))}
           </div>
@@ -16884,7 +16969,8 @@ export default function SaucierApp() {
               {search && ` matching "${search}"`}
               {catFilter === "saved" && " · Saved"}
               {diffFilter !== "all" && ` · ${diffFilter}`}
-              {techFilter !== "all" && ` · ${techFilter}`}
+              {techFilter !== "all" && ` · ${TECH_LABELS[techFilter] ?? techFilter}`}
+              {flavorFilter !== "all" && ` · ${flavorFilter}`}
             </p>
             <div style={{ display:"flex", gap:6, alignItems:"center" }}>
               <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#c8d4e0" }}>/ search · T techniques · D dark · R random · Esc back</span>
@@ -16920,7 +17006,7 @@ export default function SaucierApp() {
           )}
 
           {/* Grid / List */}
-          {catFilter === "all" && !search && diffFilter === "all" && techFilter === "all" && sortBy === "default" ? (
+          {catFilter === "all" && !search && diffFilter === "all" && techFilter === "all" && flavorFilter === "all" && sortBy === "default" ? (
             Object.entries(CATEGORIES).map(([cat, meta]) => {
               const list = SAUCES.filter(s => s.category === cat);
               return (
@@ -16933,12 +17019,12 @@ export default function SaucierApp() {
                   {viewMode === "grid" ? (
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))", gap:10 }}>
                       {list.map(s => (
-                        <SauceCard key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} />
+                        <SauceCard key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} flavor={allFlavorProfiles[s.id]} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} />
                       ))}
                     </div>
                   ) : (
                     <div style={{ background:"#fff", border:"1px solid #dde8f4", borderRadius:10, overflow:"hidden" }}>
-                      {list.map((s, i) => <SauceRow key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} isLast={i===list.length-1} />)}
+                      {list.map((s, i) => <SauceRow key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} flavor={allFlavorProfiles[s.id]} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} isLast={i===list.length-1} />)}
                     </div>
                   )}
                 </div>
@@ -16949,17 +17035,17 @@ export default function SaucierApp() {
               {viewMode === "grid" ? (
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))", gap:10 }}>
                   {sortedFiltered.map(s => (
-                    <SauceCard key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} />
+                    <SauceCard key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} flavor={allFlavorProfiles[s.id]} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} />
                   ))}
                 </div>
               ) : (
                 <div style={{ background:"#fff", border:"1px solid #dde8f4", borderRadius:10, overflow:"hidden" }}>
-                  {sortedFiltered.map((s, i) => <SauceRow key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} isLast={i===sortedFiltered.length-1} />)}
+                  {sortedFiltered.map((s, i) => <SauceRow key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} flavor={allFlavorProfiles[s.id]} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} isLast={i===sortedFiltered.length-1} />)}
                 </div>
               )}
               {sortedFiltered.length === 0 && (
                 <div style={{ textAlign:"center", padding:"40px 20px", color:"#a0b4c8", fontFamily:"'Crimson Text',serif", fontStyle:"italic" }}>
-                  No sauces found. <button style={{ background:"none", border:"none", color:"#4878c0", cursor:"pointer", fontFamily:"'Crimson Text',serif", fontStyle:"italic" }} onClick={() => { setSearch(""); setCatFilter("all"); setDiffFilter("all"); setTechFilter("all"); setSortBy("default"); }}>Clear filters</button>
+                  No sauces found. <button style={{ background:"none", border:"none", color:"#4878c0", cursor:"pointer", fontFamily:"'Crimson Text',serif", fontStyle:"italic" }} onClick={() => { setSearch(""); setCatFilter("all"); setDiffFilter("all"); setTechFilter("all"); setFlavorFilter("all"); setSortBy("default"); }}>Clear filters</button>
                 </div>
               )}
             </>
@@ -16982,7 +17068,7 @@ export default function SaucierApp() {
   );
 }
 
-function SauceCard({ sauce, isFav, inShop, isCooked, hasNote, rating, onFav, onShop, onClick }) {
+function SauceCard({ sauce, isFav, inShop, isCooked, hasNote, rating, flavor, onFav, onShop, onClick }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
@@ -17018,9 +17104,12 @@ function SauceCard({ sauce, isFav, inShop, isCooked, hasNote, rating, onFav, onS
       <p style={{ fontFamily:"'Playfair Display',serif", fontStyle:"italic", color:sauce.accent, fontSize:12, marginTop:3, marginBottom:7 }}>{sauce.tagline}</p>
       <p style={{ fontFamily:"'Crimson Text',serif", fontSize:13, color:"#7888a8", lineHeight:1.5 }}>{sauce.description.slice(0,90)}…</p>
       <div style={{ marginTop:10, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-        <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+        <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
           <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#a8b8cc" }}>⏱ {sauce.time}</span>
           <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:getDifficultyColor(sauce.difficulty) }}>{sauce.difficulty}</span>
+          {(flavor||[]).slice(0,2).map(tag => (
+            <span key={tag} style={{ fontFamily:"'Crimson Text',serif", fontSize:10, color:"#8a6020", background:"#fff8ee", border:"1px solid #e8d8a8", borderRadius:10, padding:"1px 6px", whiteSpace:"nowrap" }}>{tag}</span>
+          ))}
         </div>
         <div style={{ display:"flex", gap:5, alignItems:"center" }}>
           {rating > 0 && <span style={{ color:"#f0b030", fontSize:11, letterSpacing:"-1px", lineHeight:1 }}>{"★".repeat(rating)}{"☆".repeat(5-rating)}</span>}
@@ -17031,7 +17120,7 @@ function SauceCard({ sauce, isFav, inShop, isCooked, hasNote, rating, onFav, onS
   );
 }
 
-function SauceRow({ sauce, isFav, inShop, isCooked, hasNote, rating, onFav, onShop, onClick, isLast }) {
+function SauceRow({ sauce, isFav, inShop, isCooked, hasNote, rating, flavor, onFav, onShop, onClick, isLast }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
@@ -17055,6 +17144,9 @@ function SauceRow({ sauce, isFav, inShop, isCooked, hasNote, rating, onFav, onSh
       <div style={{ display:"flex", gap:10, alignItems:"center", flexShrink:0 }}>
         <span style={{ fontFamily:"'Crimson Text',serif", fontSize:12, color:"#a8b8cc", whiteSpace:"nowrap" }}>⏱ {sauce.time}</span>
         <span style={{ fontFamily:"'Crimson Text',serif", fontSize:12, color:getDifficultyColor(sauce.difficulty) }}>{sauce.difficulty}</span>
+        {(flavor||[]).slice(0,1).map(tag => (
+          <span key={tag} style={{ fontFamily:"'Crimson Text',serif", fontSize:10, color:"#8a6020", background:"#fff8ee", border:"1px solid #e8d8a8", borderRadius:8, padding:"1px 6px", whiteSpace:"nowrap" }}>{tag}</span>
+        ))}
         {rating > 0 && <span style={{ color:"#f0b030", fontSize:11, letterSpacing:"-1px", lineHeight:1 }}>{"★".repeat(rating)}</span>}
         <div style={{ display:"flex", gap:4, opacity: hovered||isFav||inShop ? 1 : 0, transition:"opacity .12s" }}>
           <button onClick={onFav} style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, color: isFav ? "#d04060" : "#c0c8d8", padding:"2px 4px" }}>{isFav?"♥":"♡"}</button>
