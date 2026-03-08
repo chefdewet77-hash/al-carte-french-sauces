@@ -15299,6 +15299,8 @@ export default function FrenchSaucesApp() {
   const [timerSecs,     setTimerSecs]     = useState(null);  // null = no timer active
   const [timerRunning,  setTimerRunning]  = useState(false);
   const [timerDone,     setTimerDone]     = useState(false);
+  const [ratings,       setRatings]       = useState(() => { try { return JSON.parse(localStorage.getItem("lsc_ratings") || "{}"); } catch { return {}; } }); // { [sauceId]: 1-5 }
+  const [darkMode,      setDarkMode]      = useState(() => { try { return localStorage.getItem("lsc_dark") === "1"; } catch { return false; } });
   const searchRef = useRef(null);
   const noteRef   = useRef(null);
   const timerRef  = useRef(null);
@@ -15381,7 +15383,9 @@ export default function FrenchSaucesApp() {
   useEffect(() => { try { localStorage.setItem("lsc_shop",   JSON.stringify([...shopList]));        } catch {} }, [shopList]);
   useEffect(() => { try { localStorage.setItem("lsc_steps",  JSON.stringify(completedSteps));       } catch {} }, [completedSteps]);
   useEffect(() => { try { localStorage.setItem("lsc_notes",  JSON.stringify(userNotes));            } catch {} }, [userNotes]);
-  useEffect(() => { try { localStorage.setItem("lsc_recent", JSON.stringify(recentlyViewed));       } catch {} }, [recentlyViewed]);
+  useEffect(() => { try { localStorage.setItem("lsc_recent",   JSON.stringify(recentlyViewed));     } catch {} }, [recentlyViewed]);
+  useEffect(() => { try { localStorage.setItem("lsc_ratings",  JSON.stringify(ratings));            } catch {} }, [ratings]);
+  useEffect(() => { try { localStorage.setItem("lsc_dark",     darkMode ? "1" : "0");               } catch {} }, [darkMode]);
 
   const navigateTo = (id) => {
     setSelected(id);
@@ -15451,8 +15455,10 @@ export default function FrenchSaucesApp() {
 
   const shopIngredients = aggregateIngredients([...shopList]);
 
+  const ratesSauce = (id, star) => setRatings(prev => star === prev[id] ? (({ [id]: _, ...rest }) => rest)(prev) : { ...prev, [id]: star });
+
   return (
-    <div style={{ fontFamily:"'Georgia','Times New Roman',serif", background:"#eef2f8", minHeight:"100vh", color:"#1a2540" }}>
+    <div style={{ fontFamily:"'Georgia','Times New Roman',serif", background: darkMode ? "#111827" : "#eef2f8", minHeight:"100vh", color: darkMode ? "#e2e8f0" : "#1a2540", transition:"background .3s, color .3s" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
@@ -15489,6 +15495,19 @@ export default function FrenchSaucesApp() {
         .cat-chip{background:#fff;border:1px solid #cdd8ea;cursor:pointer;padding:5px 14px;border-radius:20px;font-family:'Crimson Text',serif;font-size:13px;color:#6070a0;transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap}
         .cat-chip.on{border-color:#4878c0;color:#2060b0;background:#e4edf9}
         .cat-chip:hover:not(.on){border-color:#9ab4d0;color:#1a2540}
+        .star-btn{background:none;border:none;cursor:pointer;font-size:18px;padding:1px 2px;line-height:1;transition:transform .1s}
+        .star-btn:hover{transform:scale(1.25)}
+        ${darkMode ? `
+          .sc{background:#1e2a3e!important;border-color:#2d3f5a!important;color:#e2e8f0!important}
+          .sc:hover{border-color:#4878c0!important;box-shadow:0 10px 32px rgba(0,0,0,.4)!important}
+          .fb,.bk,.tb,.mb,.tn,.ctag,.cat-chip{background:#1e2a3e!important;border-color:#2d3f5a!important;color:#94aac4!important}
+          .fb.on,.cat-chip.on{background:#1a3060!important;border-color:#4878c0!important;color:#7ab4f0!important}
+          .overlay{background:rgba(0,0,0,.65)!important}
+          .panel{background:#111827!important}
+          input{background:#1e2a3e!important;border-color:#2d3f5a!important;color:#e2e8f0!important}
+          input::placeholder{color:#4a6080!important}
+          .badge{background:#2a5090!important}
+        ` : ""}
       `}</style>
 
       {/* ─── Header ─── */}
@@ -15515,6 +15534,9 @@ export default function FrenchSaucesApp() {
 
           {/* Right actions */}
           <div style={{ display:"flex", gap:8, alignItems:"center", flexShrink:0, flexWrap:"wrap" }}>
+            <button className="bk" onClick={() => setDarkMode(d => !d)} title="Toggle dark mode" style={{ fontSize:15, padding:"5px 10px" }}>
+              {darkMode ? "☀️" : "🌙"}
+            </button>
             <button className="bk" onClick={goRandom} title="Discover a random sauce" style={{ display:"flex", alignItems:"center", gap:5 }}>
               ✦ Random
             </button>
@@ -16018,7 +16040,22 @@ export default function FrenchSaucesApp() {
                 <p style={{ fontFamily:"'Playfair Display',serif", fontStyle:"italic", color:sauce.accent, fontSize:14 }}>{sauce.tagline}</p>
               </div>
 
-              <div style={{ display:"flex", gap:10, flexShrink:0, alignItems:"center" }}>
+              <div style={{ display:"flex", gap:10, flexShrink:0, alignItems:"center", flexWrap:"wrap", justifyContent:"flex-end" }}>
+                {/* Star rating */}
+                <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:2 }}>
+                  <div style={{ display:"flex", gap:1 }}>
+                    {[1,2,3,4,5].map(star => (
+                      <button
+                        key={star}
+                        className="star-btn"
+                        title={`Rate ${star} star${star>1?"s":""}`}
+                        onClick={() => ratesSauce(sauce.id, star)}
+                        style={{ color: star <= (ratings[sauce.id]||0) ? "#f0b030" : "#c0c8d8" }}
+                      >{star <= (ratings[sauce.id]||0) ? "★" : "☆"}</button>
+                    ))}
+                  </div>
+                  {ratings[sauce.id] && <span style={{ fontFamily:"'Crimson Text',serif", fontSize:10, color:"#a0b4c8" }}>{["","Poor","Fair","Good","Great","Perfect"][ratings[sauce.id]]}</span>}
+                </div>
                 <div style={{ textAlign:"center" }}>
                   <div style={{ fontSize:10, color:"#a0b4c8", textTransform:"uppercase", letterSpacing:"1px", fontFamily:"'Crimson Text',serif" }}>Time</div>
                   <div style={{ color:"#1a2540", fontSize:14, fontFamily:"'Crimson Text',serif" }}>{sauce.time}</div>
@@ -16238,6 +16275,47 @@ export default function FrenchSaucesApp() {
             </div>
           )}
 
+          {/* Related sauces */}
+          {(() => {
+            const parent = sauce.parent ? SAUCES.find(s => s.id === sauce.parent) : null;
+            const siblings = sauce.parent ? SAUCES.filter(s => s.parent === sauce.parent && s.id !== sauce.id) : [];
+            const children = SAUCES.filter(s => s.parent === sauce.id);
+            if (!parent && siblings.length === 0 && children.length === 0) return null;
+            return (
+              <div style={{ marginTop:24, paddingTop:18, borderTop:"1px solid #e0e8f4" }}>
+                <p style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#b0bcd0", letterSpacing:"1px", textTransform:"uppercase", marginBottom:12 }}>Related sauces</p>
+                {parent && (
+                  <div style={{ marginBottom:10 }}>
+                    <p style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#a0b4c8", marginBottom:6 }}>Parent sauce</p>
+                    <div className="tn" style={{ fontSize:12, borderColor: parent.accent+"66", color: parent.accent, display:"inline-flex", alignItems:"center", gap:4 }} onClick={() => navigateTo(parent.id)}>
+                      👑 {parent.name}
+                    </div>
+                  </div>
+                )}
+                {siblings.length > 0 && (
+                  <div style={{ marginBottom:10 }}>
+                    <p style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#a0b4c8", marginBottom:6 }}>Sibling sauces ({siblings.length})</p>
+                    <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                      {siblings.map(s => (
+                        <div key={s.id} className="tn" style={{ fontSize:12, borderColor: s.accent+"66", color: s.accent }} onClick={() => navigateTo(s.id)}>{s.name}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {children.length > 0 && (
+                  <div>
+                    <p style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#a0b4c8", marginBottom:6 }}>Daughter sauces ({children.length})</p>
+                    <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                      {children.map(s => (
+                        <div key={s.id} className="tn" style={{ fontSize:12, borderColor: s.accent+"66", color: s.accent }} onClick={() => navigateTo(s.id)}>{s.name}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
           {/* Recently viewed */}
           {recentlyViewed.filter(id => id !== selected).length > 0 && (
             <div style={{ marginTop:28, paddingTop:18, borderTop:"1px solid #e0e8f4" }}>
@@ -16267,6 +16345,7 @@ export default function FrenchSaucesApp() {
                 { label:"Saved",      value:favorites.size,            color:"#d04060", icon:"♥" },
                 { label:"In list",    value:shopList.size,             color:"#c07020", icon:"🛒" },
                 { label:"With notes", value:Object.keys(userNotes).filter(id => userNotes[id]?.trim()).length, color:"#8a6020", icon:"✏️" },
+                { label:"Rated",      value:Object.keys(ratings).length,                      color:"#b07010", icon:"⭐" },
                 { label:"Mother",     value:SAUCES.filter(s=>s.category==="mother").length,   color:"#1a4a90", icon:"👑" },
               ].map(stat => (
                 <div key={stat.label} style={{ background:"#fff", border:"1px solid #dde8f4", borderRadius:10, padding:"14px 16px", textAlign:"center" }}>
@@ -16404,12 +16483,12 @@ export default function FrenchSaucesApp() {
                   {viewMode === "grid" ? (
                     <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))", gap:10 }}>
                       {list.map(s => (
-                        <SauceCard key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} />
+                        <SauceCard key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} />
                       ))}
                     </div>
                   ) : (
                     <div style={{ background:"#fff", border:"1px solid #dde8f4", borderRadius:10, overflow:"hidden" }}>
-                      {list.map((s, i) => <SauceRow key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} isLast={i===list.length-1} />)}
+                      {list.map((s, i) => <SauceRow key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} isLast={i===list.length-1} />)}
                     </div>
                   )}
                 </div>
@@ -16420,12 +16499,12 @@ export default function FrenchSaucesApp() {
               {viewMode === "grid" ? (
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))", gap:10 }}>
                   {sortedFiltered.map(s => (
-                    <SauceCard key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} />
+                    <SauceCard key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} />
                   ))}
                 </div>
               ) : (
                 <div style={{ background:"#fff", border:"1px solid #dde8f4", borderRadius:10, overflow:"hidden" }}>
-                  {sortedFiltered.map((s, i) => <SauceRow key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} isLast={i===sortedFiltered.length-1} />)}
+                  {sortedFiltered.map((s, i) => <SauceRow key={s.id} sauce={s} isFav={favorites.has(s.id)} inShop={shopList.has(s.id)} isCooked={cookedIds.has(s.id)} hasNote={!!userNotes[s.id]?.trim()} rating={ratings[s.id]||0} onFav={e => toggleFav(s.id, e)} onShop={e => toggleShop(s.id, e)} onClick={() => navigateTo(s.id)} isLast={i===sortedFiltered.length-1} />)}
                 </div>
               )}
               {sortedFiltered.length === 0 && (
@@ -16441,7 +16520,7 @@ export default function FrenchSaucesApp() {
   );
 }
 
-function SauceCard({ sauce, isFav, inShop, isCooked, hasNote, onFav, onShop, onClick }) {
+function SauceCard({ sauce, isFav, inShop, isCooked, hasNote, rating, onFav, onShop, onClick }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
@@ -16481,13 +16560,16 @@ function SauceCard({ sauce, isFav, inShop, isCooked, hasNote, onFav, onShop, onC
           <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#a8b8cc" }}>⏱ {sauce.time}</span>
           <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:getDifficultyColor(sauce.difficulty) }}>{sauce.difficulty}</span>
         </div>
-        {sauce.children.length > 0 && <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#4888c0" }}>{sauce.children.length} daughter{sauce.children.length!==1?"s":""}</span>}
+        <div style={{ display:"flex", gap:5, alignItems:"center" }}>
+          {rating > 0 && <span style={{ color:"#f0b030", fontSize:11, letterSpacing:"-1px", lineHeight:1 }}>{"★".repeat(rating)}{"☆".repeat(5-rating)}</span>}
+          {sauce.children.length > 0 && <span style={{ fontFamily:"'Crimson Text',serif", fontSize:11, color:"#4888c0" }}>{sauce.children.length} daughter{sauce.children.length!==1?"s":""}</span>}
+        </div>
       </div>
     </div>
   );
 }
 
-function SauceRow({ sauce, isFav, inShop, isCooked, hasNote, onFav, onShop, onClick, isLast }) {
+function SauceRow({ sauce, isFav, inShop, isCooked, hasNote, rating, onFav, onShop, onClick, isLast }) {
   const [hovered, setHovered] = useState(false);
   return (
     <div
@@ -16511,6 +16593,7 @@ function SauceRow({ sauce, isFav, inShop, isCooked, hasNote, onFav, onShop, onCl
       <div style={{ display:"flex", gap:10, alignItems:"center", flexShrink:0 }}>
         <span style={{ fontFamily:"'Crimson Text',serif", fontSize:12, color:"#a8b8cc", whiteSpace:"nowrap" }}>⏱ {sauce.time}</span>
         <span style={{ fontFamily:"'Crimson Text',serif", fontSize:12, color:getDifficultyColor(sauce.difficulty) }}>{sauce.difficulty}</span>
+        {rating > 0 && <span style={{ color:"#f0b030", fontSize:11, letterSpacing:"-1px", lineHeight:1 }}>{"★".repeat(rating)}</span>}
         <div style={{ display:"flex", gap:4, opacity: hovered||isFav||inShop ? 1 : 0, transition:"opacity .12s" }}>
           <button onClick={onFav} style={{ background:"none", border:"none", cursor:"pointer", fontSize:14, color: isFav ? "#d04060" : "#c0c8d8", padding:"2px 4px" }}>{isFav?"♥":"♡"}</button>
           <button onClick={onShop} style={{ background:"none", border:"none", cursor:"pointer", fontSize:13, color: inShop ? "#2060b0" : "#a0b4c8", padding:"2px 4px" }}>{inShop?"✓":"+"}</button>
